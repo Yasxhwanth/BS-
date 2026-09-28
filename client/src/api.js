@@ -28,9 +28,10 @@ export const register = (data) => api.post('/auth/register', data);
 export const getMe    = ()     => api.get('/auth/me');
 
 // ─── Ontology ───────────────────────────
-export const getOntology    = ()     => api.get('/ontology');
-export const saveOntology   = (data) => api.post('/ontology/save', data);
-export const exportOntology = ()     => api.get('/ontology/export');
+export const getOntology     = ()     => api.get('/ontology');
+export const saveOntology    = (data) => api.post('/ontology/save', data);
+export const exportOntology  = ()     => api.get('/ontology/export');
+export const getMockOntology = ()     => api.get('/ontology/mock');
 
 // ─── Alerts ─────────────────────────────
 export const getAlerts       = (params) => api.get('/alerts', { params });

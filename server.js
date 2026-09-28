@@ -433,6 +433,15 @@ app.get('/api/ontology/export', protect, async (req, res) => {
   }
 });
 
+app.get('/api/ontology/mock', protect, async (req, res) => {
+  try {
+    const mockData = require('./mock_ontology_data.json');
+    res.json({ success: true, data: mockData });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to load mock ontology: ' + err.message });
+  }
+});
+
 // ─────────────────────────────────────────
 // ALERTS ROUTES
 // ─────────────────────────────────────────
