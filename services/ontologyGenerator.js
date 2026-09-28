@@ -10,7 +10,7 @@ const generateOntology = (nodes, edges) => {
     department: 'Department',
   };
 
-  const classes = [...new Set(nodes.map(n => classMap[n.type] || 'Entity'))].map(cls => ({
+  const classes = [...new Set(nodes.map(n => classMap[n.data?.nodeType || n.type] || 'Entity'))].map(cls => ({
     '@id': `mfg:${cls}`,
     '@type': 'owl:Class',
     'rdfs:label': cls,
@@ -19,9 +19,9 @@ const generateOntology = (nodes, edges) => {
 
   const individuals = nodes.map(n => ({
     '@id': `mfg:${n.id}`,
-    '@type': `mfg:${classMap[n.type] || 'Entity'}`,
+    '@type': `mfg:${classMap[n.data?.nodeType || n.type] || 'Entity'}`,
     'rdfs:label': n.data?.label,
-    'mfg:nodeType': n.type,
+    'mfg:nodeType': n.data?.nodeType || n.type,
     'mfg:subtype': n.data?.subtype || '',
     'mfg:description': n.data?.description || '',
     'mfg:properties': n.data?.properties || {},
