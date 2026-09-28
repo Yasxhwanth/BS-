@@ -194,25 +194,72 @@ async function askGemini({ message, history = [], ontology, alerts = [], plantDa
     },
   });
 
-  const result = await chat.sendMessage(message);
-  const text = result.response.text();
+  try {
+    const result = await chat.sendMessage(message);
+    const text = result.response.text();
 
-  // Detect basic intent from response or user query
-  let intent = 'manufacturing_intelligence';
-  const q = message.toLowerCase();
-  if (q.includes('maintenance') || q.includes('failure') || q.includes('repair')) intent = 'predictive_maintenance';
-  else if (q.includes('sensor') || q.includes('anomaly') || q.includes('temperature') || q.includes('vibration')) intent = 'sensor_telemetry';
-  else if (q.includes('quality') || q.includes('defect') || q.includes('scrap')) intent = 'quality_assurance';
-  else if (q.includes('efficiency') || q.includes('oee') || q.includes('bottleneck') || q.includes('production')) intent = 'production_optimization';
-  else if (q.includes('alert') || q.includes('warning') || q.includes('critical')) intent = 'alert_analysis';
+    // Detect basic intent from response or user query
+    let intent = 'manufacturing_intelligence';
+    const q = message.toLowerCase();
+    if (q.includes('maintenance') || q.includes('failure') || q.includes('repair')) intent = 'predictive_maintenance';
+    else if (q.includes('sensor') || q.includes('anomaly') || q.includes('temperature') || q.includes('vibration')) intent = 'sensor_telemetry';
+    else if (q.includes('quality') || q.includes('defect') || q.includes('scrap')) intent = 'quality_assurance';
+    else if (q.includes('efficiency') || q.includes('oee') || q.includes('bottleneck') || q.includes('production')) intent = 'production_optimization';
+    else if (q.includes('alert') || q.includes('warning') || q.includes('critical')) intent = 'alert_analysis';
 
-  return {
-    content: text,
-    intent,
-    confidence: 96,
-    model: modelName,
-    source: 'gemini',
-  };
+    return {
+      content: text,
+      intent,
+      confidence: 96,
+      model: modelName,
+      source: 'gemini',
+    };
+  } catch (err) {
+    let friendlyMessage = err.message;
+    let errorType = 'general_error';
+
+    if (err.message.includes('402') || err.message.includes('prepayment') || err.message.includes('Payment Required')) {
+      errorType = 'prepayment_depleted';
+      friendlyMessage = 'Google AI Studio returned [402 Payment Required]: Prepayment credits for this Google Cloud project are depleted. To resolve this, create a free API key on a new project at https://aistudio.google.com/apikey or manage billing credits.';
+    } else if (err.message.includes('403') || err.message.includes('API_KEY_INVALID') || err.message.includes('PERMISSION_DENIED')) {
+      errorType = 'invalid_key';
+      friendlyMessage = 'Google Gemini API key is invalid or unauthorized.';
+    } else if (err.message.includes('404') || err.message.includes('not found')) {
+      errorType = 'model_not_found';
+      friendlyMessage = `Gemini model "${modelName}" was not found or is deprecated.`;
+    }
+
+    console.error(`[Gemini AI Error - ${errorType}]:`, err.message);
+    return {
+      error: friendlyMessage,
+      errorType,
+      rawError: err.message,
+    };
+  }
+}
+
+// Validate API Key and Model with a quick ping
+async function validateGeminiKey(key, modelName = 'gemini-2.5-flash') {
+  if (!key || !key.trim()) {
+    return { valid: false, errorType: 'missing_key', message: 'No API key provided.' };
+  }
+  try {
+    const genAI = new GoogleGenerativeAI(key.trim());
+    const model = genAI.getGenerativeModel({ model: modelName });
+    await model.generateContent('ping');
+    return { valid: true, model: modelName };
+  } catch (err) {
+    let errorType = 'general_error';
+    let message = err.message;
+    if (err.message.includes('402')) {
+      errorType = 'prepayment_depleted';
+      message = 'Prepayment credits are depleted on this project. Create a new key in a free-tier project at https://aistudio.google.com/apikey';
+    } else if (err.message.includes('403')) {
+      errorType = 'invalid_key';
+      message = 'API key is invalid or lacks permission.';
+    }
+    return { valid: false, errorType, message };
+  }
 }
 
 module.exports = {
@@ -220,4 +267,5 @@ module.exports = {
   setGeminiKey,
   buildPlantContext,
   askGemini,
+  validateGeminiKey,
 };

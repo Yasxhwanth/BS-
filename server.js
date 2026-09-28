@@ -10,7 +10,7 @@ const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const morgan = require('morgan');
-const { isGeminiConfigured, setGeminiKey, askGemini } = require('./geminiService');
+const { isGeminiConfigured, setGeminiKey, askGemini, validateGeminiKey } = require('./geminiService');
 
 const app = express();
 const server = http.createServer(app);
@@ -157,6 +157,8 @@ const AIEngine = {
     const history = context.history || [];
     const user = context.user || null;
 
+    let geminiError = null;
+
     // 1. Attempt Gemini if configured
     if (isGeminiConfigured()) {
       try {
@@ -171,8 +173,12 @@ const AIEngine = {
         if (geminiRes && geminiRes.content) {
           return geminiRes;
         }
+        if (geminiRes && geminiRes.error) {
+          geminiError = geminiRes.error;
+        }
       } catch (err) {
         console.error('[Gemini AI] Call failed, using fallback:', err.message);
+        geminiError = err.message;
       }
     }
 
@@ -215,16 +221,20 @@ const AIEngine = {
       fallbackReply = `I'm your Manufacturing AI Assistant. Your current ontology has ${nodes.length} entities. I can help with predictive maintenance, quality analysis, sensor monitoring, workforce optimization, and production efficiency. What would you like to explore?`;
     }
 
-    const hint = !isGeminiConfigured()
-      ? '\n\n*(💡 Tip: Add your `GEMINI_API_KEY` to .env or in the AI Key config above to activate live Google Gemini)*'
-      : '';
+    let hint = '';
+    if (geminiError) {
+      hint = `\n\n*(⚠️ Gemini Notice: ${geminiError})*`;
+    } else if (!isGeminiConfigured()) {
+      hint = '\n\n*(💡 Tip: Add your `GEMINI_API_KEY` to .env or in the AI Key config above to activate live Google Gemini)*';
+    }
 
     return {
       content: fallbackReply + hint,
       intent,
       confidence,
-      model: 'simulated-engine',
+      model: geminiError ? 'simulated-engine (fallback)' : 'simulated-engine',
       source: 'simulation',
+      error: geminiError || undefined,
     };
   },
 
@@ -734,15 +744,21 @@ app.get('/api/chat/status', protect, async (req, res) => {
 app.post('/api/chat/config', protect, async (req, res) => {
   try {
     const { apiKey, model } = req.body;
+    const modelToUse = model || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+
+    let validation = { valid: true };
     if (apiKey) {
-      setGeminiKey(apiKey, model);
+      validation = await validateGeminiKey(apiKey, modelToUse);
+      setGeminiKey(apiKey, modelToUse);
     }
+
     res.json({
       success: true,
-      message: 'Gemini configuration updated',
+      message: validation.valid ? 'Gemini configuration updated and validated' : 'Key saved, but validation returned an issue',
+      validation,
       data: {
         configured: isGeminiConfigured(),
-        model: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
+        model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
       },
     });
   } catch (err) {
