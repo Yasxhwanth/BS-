@@ -326,7 +326,7 @@ export default function Chat({ user }) {
                         letterSpacing: 0.5,
                       }}
                     >
-                      {msg.meta?.source === 'gemini' ? `✨ ${msg.meta?.model || 'Gemini'}` : '🤖 Simulated Engine'}
+                      {msg.meta?.source === 'gemini' ? (msg.meta?.model || 'Gemini') : 'Simulated Engine'}
                     </span>
                     {msg.meta?.intent && (
                       <span style={{ color: 'var(--text-helper)' }}>

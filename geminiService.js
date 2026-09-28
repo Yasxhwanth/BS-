@@ -139,7 +139,8 @@ RESPONSE GUIDELINES:
 2. Ground your answers directly in the plant's active ontology nodes (processes, sensors, materials, workers, products, departments) whenever applicable.
 3. Suggest clear next steps (predictive maintenance scheduling, parameter adjustments, defect root cause analysis, shift reallocation).
 4. Format responses cleanly using markdown (bullet points, bold highlights, concise structured sections).
-5. Maintain a professional, sharp, and encouraging engineering tone.`;
+5. Maintain a professional, sharp, and encouraging engineering tone.
+6. Do NOT use emojis anywhere in your response. Keep all text strictly clean, technical, and professional.`;
 }
 
 // Generate chat response via Gemini

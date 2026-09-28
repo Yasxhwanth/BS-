@@ -223,9 +223,9 @@ const AIEngine = {
 
     let hint = '';
     if (geminiError) {
-      hint = `\n\n*(⚠️ Gemini Notice: ${geminiError})*`;
+      hint = `\n\n*(Gemini Notice: ${geminiError})*`;
     } else if (!isGeminiConfigured()) {
-      hint = '\n\n*(💡 Tip: Add your `GEMINI_API_KEY` to .env or in the AI Key config above to activate live Google Gemini)*';
+      hint = '\n\n*(Tip: Add your `GEMINI_API_KEY` to .env or in the AI Key config above to activate live Google Gemini)*';
     }
 
     return {
@@ -868,7 +868,7 @@ const autoGenerateAlerts = async (nodes, edges) => {
 // SOCKET.IO — Real-time events
 // ─────────────────────────────────────────
 io.on('connection', (socket) => {
-  console.log(`🔌 Socket connected: ${socket.id}`);
+  console.log(`Socket connected: ${socket.id}`);
 
   // Simulate live sensor data every 3 seconds
   const sensorInterval = setInterval(() => {
@@ -885,7 +885,7 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     clearInterval(sensorInterval);
-    console.log(`🔌 Socket disconnected: ${socket.id}`);
+    console.log(`Socket disconnected: ${socket.id}`);
   });
 });
 
@@ -896,7 +896,7 @@ async function seedDemoData() {
   try {
     const userCount = await User.countDocuments();
     if (userCount === 0) {
-      console.log('🌱 Seeding initial demo data...');
+      console.log('Seeding initial demo data...');
       await User.create({
         name: 'Demo Admin',
         email: 'admin@company.com',
@@ -904,7 +904,7 @@ async function seedDemoData() {
         role: 'admin',
         department: 'Management',
       });
-      console.log('✅ Created Demo User: admin@company.com / password123');
+      console.log('Created Demo User: admin@company.com / password123');
 
       // Seed starter alerts
       await Alert.create([
@@ -936,7 +936,7 @@ async function seedDemoData() {
           recommendation: 'Submit purchase requisition for immediate replenishment.',
         },
       ]);
-      console.log('✅ Created initial starter alerts');
+      console.log('Created initial starter alerts');
 
       // Seed initial PlantData
       await PlantData.create({
@@ -989,10 +989,10 @@ async function seedDemoData() {
         ],
         fileName: 'sample_manufacturing_data.xlsx',
       });
-      console.log('✅ Created initial PlantData metrics');
+      console.log('Created initial PlantData metrics');
     }
   } catch (err) {
-    console.error('⚠️ Seeding error:', err.message);
+    console.error('Seeding error:', err.message);
   }
 }
 
@@ -1003,26 +1003,26 @@ async function connectDatabase() {
   if (process.env.MONGO_URI && !process.env.MONGO_URI.includes('localhost') && !process.env.MONGO_URI.includes('127.0.0.1')) {
     try {
       await mongoose.connect(uri);
-      console.log('✅ MongoDB Connected (Cloud/Atlas)');
+      console.log('MongoDB Connected (Cloud/Atlas)');
       await seedDemoData();
       return;
     } catch (err) {
-      console.error('❌ Remote MongoDB connection failed:', err.message);
+      console.error('Remote MongoDB connection failed:', err.message);
     }
   }
 
   // Attempt local MongoDB with a short timeout
   try {
     await mongoose.connect(uri, { serverSelectionTimeoutMS: 2000 });
-    console.log('✅ MongoDB Connected (Local mongod)');
+    console.log('MongoDB Connected (Local mongod)');
     await seedDemoData();
   } catch (err) {
-    console.log('ℹ️ Local MongoDB not detected. Starting in-memory MongoDB server...');
+    console.log('Local MongoDB not detected. Starting in-memory MongoDB server...');
     const { MongoMemoryServer } = require('mongodb-memory-server');
     mongodInstance = await MongoMemoryServer.create();
     const memoryUri = mongodInstance.getUri();
     await mongoose.connect(memoryUri);
-    console.log(`✅ In-memory MongoDB Connected at ${memoryUri}`);
+    console.log(`In-memory MongoDB Connected at ${memoryUri}`);
     await seedDemoData();
   }
 }
@@ -1034,7 +1034,7 @@ const PORT = process.env.PORT || 5000;
 
 connectDatabase().then(() => {
   server.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
   });
 }).catch(err => {
   console.error('Failed to start server:', err);
