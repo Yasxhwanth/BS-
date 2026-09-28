@@ -18,17 +18,68 @@ const Icons = {
 };
 
 const NAV = [
-  { path: '/',          label: 'Dashboard',      icon: Icons.Dashboard  },
-  { path: '/ontology',  label: 'Ontology Builder', icon: Icons.Ontology },
-  { path: '/analytics', label: 'Analytics',       icon: Icons.Analytics },
-  { path: '/chat',      label: 'AI Assistant',    icon: Icons.Chat      },
-  { path: '/alerts',    label: 'Alerts',          icon: Icons.Alerts    },
+  { path: '/',          label: 'Dashboard',           icon: Icons.Dashboard  },
+  { path: '/ontology',  label: 'Digital Twin Studio', icon: Icons.Ontology },
+  { path: '/analytics', label: 'Analytics',            icon: Icons.Analytics },
+  { path: '/chat',      label: 'AI Assistant',         icon: Icons.Chat      },
+  { path: '/alerts',    label: 'Alerts',               icon: Icons.Alerts    },
 ];
 
 export default function App() {
   const [user, setUser] = useState(() => {
     try { return JSON.parse(localStorage.getItem('aip_user')); } catch { return null; }
   });
+
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aip_sidebar_width');
+      return saved ? Math.min(Math.max(parseInt(saved, 10), 180), 480) : 256;
+    } catch {
+      return 256;
+    }
+  });
+  const [isResizing, setIsResizing] = useState(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isResizing) return;
+      const newWidth = Math.min(Math.max(e.clientX, 180), 480);
+      setSidebarWidth(newWidth);
+      try {
+        localStorage.setItem('aip_sidebar_width', newWidth);
+      } catch {}
+    };
+
+    const handleMouseUp = () => {
+      if (isResizing) {
+        setIsResizing(false);
+      }
+    };
+
+    if (isResizing) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
+
+  const handleDoubleClick = () => {
+    setSidebarWidth(256);
+    try {
+      localStorage.setItem('aip_sidebar_width', 256);
+    } catch {}
+  };
 
   const handleLogin  = (u) => setUser(u);
   const handleLogout = () => {
@@ -41,7 +92,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="app-shell">
+      <div className="app-shell" style={{ gridTemplateColumns: `${sidebarWidth}px 1fr` }}>
 
         {/* ── Header ── */}
         <header className="app-header">
@@ -71,7 +122,7 @@ export default function App() {
             <NavLink key={n.path} to={n.path} end={n.path === '/'}
               className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}>
               {n.icon}
-              {n.label}
+              <span className="sidebar-item-label">{n.label}</span>
             </NavLink>
           ))}
           <div style={{ flex: 1 }} />
@@ -80,6 +131,17 @@ export default function App() {
             <span>v1.0.0</span>
             <span>· MERN Stack</span>
           </div>
+
+          {/* Resizer Handle */}
+          <div
+            className={`sidebar-resizer ${isResizing ? 'active' : ''}`}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setIsResizing(true);
+            }}
+            onDoubleClick={handleDoubleClick}
+            title="Drag to resize sidebar, double-click to reset"
+          />
         </aside>
 
         {/* ── Main Content ── */}

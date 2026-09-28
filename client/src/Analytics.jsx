@@ -88,7 +88,7 @@ export default function Analytics() {
           <div className="card">
             <div className="card-header"><span className="card-title">Ontology Composition</span></div>
             {total === 1 && nodes.length === 0 ? (
-              <div className="text-secondary text-sm">No ontology built yet. Go to Ontology Builder.</div>
+              <div className="text-secondary text-sm">No digital twin built yet. Go to Digital Twin Studio.</div>
             ) : (
               <>
                 {nodeTypeStats.map(s => (
@@ -113,7 +113,7 @@ export default function Analytics() {
           <div className="card">
             <div className="card-header"><span className="card-title">Relationship Types</span></div>
             {Object.keys(relCounts).length === 0 ? (
-              <div className="text-secondary text-sm">Draw edges in the Ontology Builder to see relationships.</div>
+              <div className="text-secondary text-sm">Draw edges in Digital Twin Studio to see relationships.</div>
             ) : (
               Object.entries(relCounts).map(([rel, count]) => (
                 <div key={rel} className="progress-bar-wrap">

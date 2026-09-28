@@ -44,7 +44,7 @@ export default function Login({ onLogin }) {
           </p>
           <div className="auth-features">
             {[
-              'Drag-and-drop ontology builder with ReactFlow',
+              'Interactive Digital Twin Studio with ReactFlow',
               'Auto-generated OWL knowledge graph',
               'Predictive maintenance AI engine',
               'Real-time sensor monitoring & alerts',

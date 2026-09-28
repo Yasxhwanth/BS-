@@ -349,7 +349,7 @@ export default function OntologyBuilder() {
       {/* Toolbar */}
       <div className="ontology-toolbar" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', marginRight: 4, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <Network_4 size={18} /> Ontology Builder
+          <Network_4 size={18} /> Digital Twin Studio
         </span>
 
         {ontologyMeta && (
