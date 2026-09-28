@@ -1,22 +1,132 @@
 # SmartFactory — Manufacturing Intelligence Platform
 
-A full-stack MERN application for smart manufacturing: real-time sensor telemetry, AI chat, ontology-based knowledge graphs, production analytics, and alert management — all in an IBM Carbon dark-themed UI.
+A full-stack MERN application for smart manufacturing: digital twin knowledge graphs, real-time telemetry streaming, predictive AI intelligence, production analytics, and automated incident management — all built with strict adherence to the **IBM Carbon Design System**.
+
+---
+
+## Architecture Overview
+
+```
+                      ┌──────────────────────────────────────────────┐
+                      │              React 19 Frontend               │
+                      │  IBM Carbon Design System · IBM Plex Fonts   │
+                      │     Dark / Light Mode · ReactFlow 11         │
+                      └───────┬───────────────────────────────▲──────┘
+                              │ HTTP Requests (Axios + JWT)   │ WebSockets (Socket.IO)
+                              ▼                               │ (sensor:live, dashboard:updated)
+                      ┌───────────────────────────────────────┴──────┐
+                      │             Node.js Express 5 API            │
+                      │        JWT Authentication & Protected API     │
+                      └───────┬──────────────┬────────────────┬──────┘
+                              │              │                │
+            ┌─────────────────┴─┐   ┌────────┴────────┐  ┌───┴──────────────────┐
+            │ In-Memory MongoDB │   │ Google Gemini AI│  │ Digital Twin Engine  │
+            │   (Mongoose ODM)  │   │  (Flash / Pro)  │  │ OWL JSON-LD Generator│
+            └───────────────────┘   └─────────────────┘  └──────────────────────┘
+```
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 19, Vite, React Router, ReactFlow |
-| Styling | IBM Carbon Design System tokens + Vanilla CSS |
-| Icons | `@carbon/icons-react` |
-| Backend | Node.js, Express 5 |
-| Database | MongoDB via Mongoose (in-memory with `mongodb-memory-server`) |
-| Real-time | Socket.IO |
-| AI | Google Gemini API (`@google/generative-ai`) with local fallback |
-| Data Import | `xlsx` (Excel parsing) |
-| Auth | JWT (`jsonwebtoken`) + bcrypt |
+| Layer | Technology | Description |
+| :--- | :--- | :--- |
+| **Frontend** | React 19, Vite 8, React Router 7 | Fast modular Single Page Application |
+| **Graph Visualization** | ReactFlow (`reactflow`) | Interactive Digital Twin knowledge graph |
+| **Design System** | IBM Carbon Design System tokens + Vanilla CSS | Zero border-radius (`0px`), flat tiles, left accent strips |
+| **Typography** | `IBM Plex Sans`, `IBM Plex Mono` | Industrial technical typography |
+| **Icons** | `@carbon/icons-react` | Official IBM Carbon SVG icons |
+| **Backend** | Node.js, Express 5 | RESTful JSON APIs and WebSocket server |
+| **Database** | MongoDB via Mongoose | Zero-config in-memory database (`mongodb-memory-server`) |
+| **Real-time** | Socket.IO | 3s telemetry feed and real-time dashboard events |
+| **AI Engine** | Google Gemini API (`@google/generative-ai`) | Manufacturing Copilot with deterministic local fallback |
+| **Data Import** | `xlsx` | Multi-sheet Excel & CSV parsing for plant metrics and graph nodes |
+| **Security** | JWT (`jsonwebtoken`) + `bcrypt` | Secure authentication with auto-logout on token expiry |
+
+---
+
+## IBM Carbon Design System Principles
+
+This application strictly implements IBM Carbon Design principles:
+* **Zero Border Radius (`0px`)**: All tiles, buttons, inputs, tags, and progress bars use square corners.
+* **Flat Surfaces**: No drop shadows or decorative gradients on content cards. Elevation is established with sharp `1px solid var(--border-subtle)` borders and high-contrast backgrounds.
+* **Left Vertical Accent Strips**: 3px or 4px solid color indicators on the left edge of KPI tiles, alerts, and process cards to convey status and categories.
+* **Industrial Typography**:
+  * Body & headers: `IBM Plex Sans`
+  * Numerical data, KPIs, code, and telemetry: `IBM Plex Mono`
+  * Section subheaders: 11px uppercase with `0.8px` letter tracking
+* **Theme Support**: Seamless Dark Mode (Carbon `g100` / `g90`) and Light Mode (Carbon `white` / `g10`) toggled from the global navigation and persisted in `localStorage`.
+
+---
+
+## Digital Twin & Dashboard Connectivity
+
+The Digital Twin knowledge graph is interconnected with the Dashboard and Analytics engine:
+
+```
+[Digital Twin Studio] ──(Save / Import)──► [Ontology DB Model]
+                                                   │
+             ┌─────────────────────────────────────┴─────────────────────────────────────┐
+             ▼                                     ▼                                     ▼
+     [Dashboard KPIs]                      [Live Telemetry]                     [Automated Alerts]
+• Twin Nodes Count (30)             • Sensor nodes stream live values     • Node anomalies trigger alerts
+• Semantic Links Count (40)           every 3s via Socket.IO                with { nodeId, nodeLabel }
+• Process cycle times & health      • Color-coded nominal/warning/crit    • Feeds Critical Alert counters
+```
+
+1. **Live Twin KPIs**: The Dashboard queries `Ontology.findOne({ createdBy: user._id })` dynamically:
+   - **`Twin Nodes`**: Live count of ontology nodes (default 30).
+   - **`Links`**: Live count of semantic relationships (default 40).
+2. **Real-time WebSocket Sync**: Saving an ontology emits `dashboard:updated` and `ontology:updated` via Socket.IO, triggering an automatic refresh of all dashboard tiles.
+3. **Plant Telemetry**: Sensor nodes correlate with the `Plant Telemetry` live panel on the Dashboard, streaming readings with pulsating status dots.
+4. **Process Efficiency**: Process nodes correlate with the `Process Efficiency` cards, tracking cycle times, efficiency percentages, and active warnings.
+5. **AI Alerts Propagation**: Anomalies detected across ontology entities automatically generate structured alerts containing `source: { nodeId, nodeLabel, nodeType }`.
+
+---
+
+## Core Application Modules
+
+### 1. Dashboard (`client/src/Dashboard.jsx`)
+* **8 Carbon KPI Tiles**: OEE, Production Efficiency, Quality Rate, Power Load, MTBF, MTTR, Active Alerts, and Twin Nodes with color accents.
+* **Production Output vs Target Chart**: Dual-bar comparison (Output vs Defects) with hover tooltips and dynamic scaling.
+* **Plant Telemetry**: Live sensor stream with animated status indicators.
+* **Process Efficiency Matrix**: Real-time progress bars for each manufacturing cell.
+* **Excel Data Import**: Drag-and-drop or select Excel files to instantly update KPIs, trends, and processes.
+
+### 2. Digital Twin Studio (`client/src/OntologyBuilder.jsx`)
+* **Interactive Canvas**: Powered by ReactFlow with smooth panning, zoom controls, and minimap.
+* **30 Preloaded Default Nodes**: Ready-to-use plant topology covering 6 entity classes (*Processes, Sensors, Materials, Workers, Products, Departments*).
+* **Color-Coded Glowing Edges**:
+  - `monitors`: Cyan `#3ddbd9` (animated dashed glow)
+  - `feeds_into`: IBM Blue `#0f62fe`
+  - `produces`: Green `#42be65`
+  - `operated_by`: Yellow `#f1c21b`
+  - `belongs_to`: Purple `#be95ff`
+  - `requires`: Orange `#ff832b`
+  - `inspects`: Green `#42be65` (animated pulse)
+* **Floating Node Inspector**: Opens only upon clicking a node; includes entity properties, subtype editor, and an **X** close button.
+* **Semantic Auto-Relate**: Automatically infers and creates domain relationships between nodes based on manufacturing rules.
+* **OWL JSON-LD Export**: Exports the ontology structure to standard W3C OWL/RDF JSON-LD format.
+
+### 3. Analytics & Predictions (`client/src/Analytics.jsx`)
+* **6 Key Production Metrics**: OEE, Efficiency, Quality, MTBF, MTTR, Power Load in `IBM Plex Mono`.
+* **Digital Twin Class Distribution**: Real-time progress bars showing the breakdown and percentage share of all 6 entity types.
+* **Knowledge Graph Semantic Breakdown**: Counts and percentages of relationship types.
+* **AI Predictive Maintenance Matrix**:
+  - Process degradation risk classification (*High Risk, Attention, Nominal*).
+  - Health Index and Maintenance Urgency meters.
+  - Estimated hours to failure horizon.
+
+### 4. AI Assistant Copilot (`client/src/Chat.jsx`)
+* **Gemini-Powered Intelligence**: Natural language querying of plant status, equipment degradation, sensor anomalies, and ontology relationships.
+* **Hybrid Fallback**: Operates offline using a local deterministic expert system when no API key is supplied.
+* **Carbon Chat UI**: Square message tiles, Carbon tag suggestion chips, runtime Gemini configuration modal, and conversation reset.
+
+### 5. Intelligent Alerts Feed (`client/src/Alerts.jsx`)
+* **Severity Tiers**: `Critical`, `High`, `Medium`, `Low`, and `Info` with left color bars.
+* **Filter Controls**: Filter by status (*Active, Acknowledged, Resolved*) and severity.
+* **AI Recommendation Banners**: Actionable suggestions generated for flagged equipment.
+* **Direct Node Links**: Identifies the exact twin node where the anomaly occurred.
 
 ---
 
@@ -24,225 +134,149 @@ A full-stack MERN application for smart manufacturing: real-time sensor telemetr
 
 ```
 MINI_PROJECT/
-├── server.js                  # Entry point — Express + Socket.IO server
-├── geminiService.js           # Gemini AI API wrapper
-├── .env                       # Environment variables (not committed)
+├── server.js                  # Modular entry point (Express 5 + Socket.IO)
+├── geminiService.js           # Gemini SDK wrapper
+├── mock_ontology_data.json    # 30-node, 40-edge reference plant topology
+├── .env                       # Environment configuration
 │
 ├── db/
-│   └── connection.js          # MongoDB connect/disconnect helpers
+│   └── connection.js          # In-memory MongoDB startup & connection
 │
 ├── middleware/
-│   └── auth.js                # JWT protect middleware + token generator
+│   └── auth.js                # JWT protect middleware + token generation
 │
 ├── models/
-│   └── index.js               # All Mongoose schemas: User, Ontology, Alert,
-│                              #   SensorData, ChatMessage, PlantData
+│   └── index.js               # Schemas: User, Ontology, Alert, SensorData,
+│                              #   ChatMessage, PlantData
 │
 ├── routes/
-│   ├── authRoutes.js          # POST /auth/register, /auth/login, GET /auth/me
-│   ├── ontologyRoutes.js      # GET/POST ontology, export, mock data
-│   ├── alertRoutes.js         # CRUD alerts, acknowledge/resolve
-│   ├── analyticsRoutes.js     # Dashboard KPIs, predictive analytics
-│   ├── chatRoutes.js          # AI chat, history, Gemini config
-│   └── uploadRoutes.js        # POST /upload/excel → parses KPIs, sensors,
-│                              #   alerts, processes; POST /data/reset-demo
+│   ├── authRoutes.js          # Authentication endpoints
+│   ├── ontologyRoutes.js      # Ontology CRUD, mock plant, JSON-LD export
+│   ├── alertRoutes.js         # Alerts management and lifecycle
+│   ├── analyticsRoutes.js     # Dashboard KPIs and node predictive scores
+│   ├── chatRoutes.js          # AI Assistant queries and Gemini config
+│   └── uploadRoutes.js        # Excel sheet processing & dataset reset
 │
 ├── services/
-│   ├── aiEngine.js            # Gemini-first AI engine with keyword fallback
-│   └── ontologyGenerator.js   # Parses graph → OWL-style JSON-LD, loads mock data
+│   ├── aiEngine.js            # Dual-layer AI engine (Gemini + fallback)
+│   └── ontologyGenerator.js   # OWL JSON-LD generator & alert synthesis
 │
 ├── sockets/
-│   └── index.js               # Socket.IO setup — emits live sensor:live every 3s
+│   └── index.js               # Real-time telemetry simulation (every 3s)
 │
-└── client/                    # React frontend (Vite)
+└── client/                    # React 19 Frontend
     └── src/
-        ├── main.jsx           # React root
-        ├── App.jsx            # Layout shell, routing, resizable sidebar
-        ├── api.js             # Axios instance (JWT interceptor + auto-logout)
-        ├── index.css          # Global styles — Carbon dark tokens, components
-        │
-        ├── Login.jsx          # Auth page (login + register)
-        ├── Dashboard.jsx      # KPI tiles, production chart, sensor telemetry
-        ├── OntologyBuilder.jsx# Digital Twin Studio — ReactFlow knowledge graph
-        ├── Chat.jsx           # AI chat interface (Gemini / fallback)
-        ├── Alerts.jsx         # Alert list with severity filtering
-        ├── Analytics.jsx      # Deep-dive KPI and process analytics
-        └── ontologyUtils.js   # Auto-layout, auto-relationship builder,
-                               #   Excel-to-node parser, RELATIONSHIP definitions
+        ├── main.jsx           # Application entry point
+        ├── App.jsx            # Shell with Carbon header, nav, & light/dark toggle
+        ├── api.js             # Axios client with JWT auto-injection
+        ├── index.css          # Carbon Design System CSS tokens (dark + light)
+        ├── Login.jsx          # Flat Carbon authentication screen
+        ├── Dashboard.jsx      # Manufacturing executive dashboard
+        ├── OntologyBuilder.jsx# Digital Twin Studio (ReactFlow graph)
+        ├── Analytics.jsx      # Predictive maintenance & graph analytics
+        ├── Chat.jsx           # AI Assistant Copilot
+        ├── Alerts.jsx         # Operations incident feed
+        └── ontologyUtils.js   # Graph layout algorithms & semantic helpers
 ```
-
----
-
-## Key Files Explained
-
-### `server.js`
-Entry point. Creates an Express app + HTTP server + Socket.IO instance. Registers all route modules and starts the database connection before listening.
-
-```js
-const io = new Server(server, { cors: { origin: '*' } });
-app.set('io', io);           // makes io accessible inside route handlers
-setupSockets(io);            // starts live sensor simulation
-connectDatabase().then(() => server.listen(PORT));
-```
-
-### `middleware/auth.js`
-JWT-based route protection. Reads `Authorization: Bearer <token>`, verifies it, and attaches `req.user`.
-
-```js
-const protect = async (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  req.user = await User.findById(decoded.id);
-  next();
-};
-```
-
-### `models/index.js`
-All six Mongoose schemas in one file:
-- **User** — name, email, hashed password, role, department
-- **Ontology** — nodes[], edges[], generatedOntology (OWL-style JSON-LD)
-- **Alert** — severity, category, status (active/acknowledged/resolved), AI confidence
-- **SensorData** — readings[], thresholds, anomaly tracking
-- **ChatMessage** — conversationId, role (user/assistant), content
-- **PlantData** — KPI metrics, production trend, process breakdown, live sensors
-
-### `sockets/index.js`
-Emits `sensor:live` every 3 seconds to each connected client with randomised Temperature, Vibration, Pressure, and Speed readings.
-
-```js
-const sensorInterval = setInterval(() => {
-  socket.emit('sensor:live', { timestamp, sensors: [...] });
-}, 3000);
-```
-
-### `services/aiEngine.js`
-Two-tier AI: first tries Gemini API, falls back to a keyword-matching engine that generates context-aware responses about maintenance, sensors, workers, quality, and production.
-
-### `services/ontologyGenerator.js`
-- Converts ReactFlow nodes/edges into OWL-compatible JSON-LD classes
-- Serves the 30-node / 40-edge mock manufacturing plant from `mock_ontology_data.json`
-
-### `client/src/api.js`
-Axios instance with two interceptors:
-1. **Request** — injects `Authorization: Bearer <token>` from `localStorage`
-2. **Response** — on `401`, clears storage and redirects to `/login`
-
-### `client/src/OntologyBuilder.jsx` (Digital Twin Studio)
-Interactive knowledge graph built on ReactFlow:
-- **30 default nodes** auto-loaded on mount (mock manufacturing plant)
-- **Floating Node Inspector** — opens only when a node is clicked; has an X close button
-- **Auto-Relate** — builds semantic edges (monitors, produces, operated_by, etc.) from node types
-- **Drag-drop** from entity palette (Process, Sensor, Material, Worker, Product, Department)
-- **Multi-file upload** — Excel sheets parsed into typed nodes with auto-layout
-
-### `client/src/ontologyUtils.js`
-Three exported utilities:
-
-| Export | Description |
-|---|---|
-| `RELATIONSHIPS` | 10 semantic edge types (monitors, feeds_into, produces…) |
-| `autoLayoutNodes(nodes)` | Arranges nodes into 6 vertical columns by entity type |
-| `buildAutoRelationships(nodes)` | Creates semantically correct edges based on node types and labels |
-| `parseExcelRowsToNodes(file, rows, n)` | Detects entity type from filename, maps Excel columns to node data |
 
 ---
 
 ## Setup & Running
 
 ### Prerequisites
-- Node.js 18+
-- No MongoDB installation needed — uses in-memory MongoDB automatically
+* **Node.js 18+**
+* No external MongoDB service required (runs automatically in-memory).
 
-### 1. Clone & install
+### 1. Installation
 ```bash
-git clone https://github.com/Yasxhwanth/BS-.git
+# Clone the repository
+git clone git@github.com:Yasxhwanth/BS-.git
 cd BS-
+
+# Install backend dependencies
 npm install
+
+# Install frontend dependencies
 cd client && npm install && cd ..
 ```
 
-### 2. Environment variables
-Create `.env` in the project root:
+### 2. Environment Setup
+Create a `.env` file in the project root:
 ```env
 PORT=5000
-JWT_SECRET=your_jwt_secret_here
-GEMINI_API_KEY=your_gemini_api_key_here   # optional — app works without it
+JWT_SECRET=super_secret_manufacturing_jwt_key_2026
+GEMINI_API_KEY=your_gemini_api_key_here    # Optional: falls back to local engine if omitted
 ```
 
-### 3. Run (two terminals)
+### 3. Running Locally
+Run backend and frontend concurrently in two terminals:
+
 ```bash
-# Terminal 1 — Backend
+# Terminal 1 — Backend (Port 5000)
 node server.js
 
-# Terminal 2 — Frontend
-cd client && npm run dev
+# Terminal 2 — Frontend (Port 3000)
+cd client
+npm run dev
 ```
 
-Frontend: `http://localhost:3000`  
-Backend API: `http://localhost:5000/api`
+* **Frontend**: `http://localhost:3000`
+* **Backend API**: `http://localhost:5000/api`
+* **Default Demo Credentials**: `admin@company.com` / `password123`
 
 ---
 
 ## API Reference
 
-### Auth
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/auth/register` | Create account |
-| POST | `/api/auth/login` | Login → returns JWT |
-| GET | `/api/auth/me` | Get current user |
+### Authentication (`/api/auth`)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Create a new user account | No |
+| `POST` | `/api/auth/login` | Authenticate user and receive JWT token | No |
+| `GET` | `/api/auth/me` | Fetch currently authenticated user profile | Yes |
 
-### Ontology
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/ontology` | Load saved ontology |
-| POST | `/api/ontology/save` | Save nodes + edges, generate OWL |
-| GET | `/api/ontology/export` | Export as JSON-LD |
-| GET | `/api/ontology/mock` | Load 30-node mock plant |
+### Digital Twin & Ontology (`/api/ontology`)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/ontology` | Retrieve user's saved ontology graph | Yes |
+| `POST` | `/api/ontology/save` | Persist nodes & edges, compile OWL JSON-LD | Yes |
+| `GET` | `/api/ontology/export` | Download W3C OWL-compliant JSON-LD document | Yes |
+| `GET` | `/api/ontology/mock` | Load 30-node, 40-edge manufacturing plant | Yes |
 
-### Alerts
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/alerts` | List alerts (filter: `?severity=critical`) |
-| PATCH | `/api/alerts/:id/acknowledge` | Mark acknowledged |
-| PATCH | `/api/alerts/:id/resolve` | Mark resolved |
+### Analytics & Predictions (`/api/analytics`)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/analytics/dashboard` | Comprehensive plant KPIs, trends, and telemetry | Yes |
+| `GET` | `/api/analytics/predict/:nodeId`| Predictive degradation forecast for specific node | Yes |
 
-### Analytics
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/analytics/dashboard` | KPIs, production trend, sensors |
-| GET | `/api/analytics/predict/:id` | Predictive maintenance score for node |
+### AI Assistant (`/api/chat`)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/chat` | Send prompt to AI Copilot (with plant context) | Yes |
+| `GET` | `/api/chat/history/:id` | Fetch conversation transcript | Yes |
+| `GET` | `/api/chat/status` | Check Gemini API connection status | Yes |
+| `POST` | `/api/chat/config` | Update Gemini API Key and model selection | Yes |
 
-### Chat
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/chat` | Send message → AI response |
-| GET | `/api/chat/history/:id` | Conversation history |
-| POST | `/api/chat/config` | Set Gemini API key at runtime |
+### Operations & Alerts (`/api/alerts`)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/alerts` | List incidents with optional `?severity=` and `?status=` | Yes |
+| `PATCH`| `/api/alerts/:id/acknowledge`| Move alert to acknowledged state | Yes |
+| `PATCH`| `/api/alerts/:id/resolve` | Mark alert as resolved | Yes |
 
-### Data
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/upload/excel` | Upload Excel → parse KPIs, sensors, alerts |
-| POST | `/api/data/reset-demo` | Reset user data to defaults |
-
----
-
-## Socket.IO Events
-
-| Event | Direction | Payload |
-|---|---|---|
-| `sensor:live` | Server → Client | `{ timestamp, sensors: [{id, label, type, value, unit, status}] }` |
-| `dashboard:updated` | Server → Client | `{ fileName, at }` — fired after Excel import |
+### Data Management (`/api/upload`, `/api/data`)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/upload/excel` | Parse and ingest Excel manufacturing workbook | Yes |
+| `POST` | `/api/data/reset-demo` | Restore original demo dataset | Yes |
 
 ---
 
-## Features
+## WebSocket Events (Socket.IO)
 
-- **Dashboard** — 8 real-time KPI tiles, dual-bar production chart, live sensor list with status indicators, process efficiency breakdown
-- **Digital Twin Studio** — 30-node manufacturing knowledge graph with drag-drop canvas, auto-relationship building, floating node inspector, Excel/JSON import
-- **AI Chat** — Google Gemini-powered assistant with ontology context; keyword fallback when API key not set
-- **Alerts** — Severity-based filtering (critical / high / medium / low), acknowledge and resolve workflow
-- **Analytics** — KPI trends, process efficiency progress bars, OEE breakdown
-- **Auth** — JWT login/register, role-based (admin, engineer, operator, analyst)
-- **Resizable Sidebar** — Drag to resize, persisted in `localStorage`
+| Event Name | Direction | Payload Structure | Trigger |
+| :--- | :--- | :--- | :--- |
+| `sensor:live` | Server → Client | `{ timestamp, sensors: [{ id, label, type, value, unit, status }] }` | Emitted every 3 seconds |
+| `dashboard:updated` | Server → Client | `{ timestamp }` | Fired when new Excel data is imported or ontology is saved |
+| `ontology:updated` | Server → Client | `{ ontologyId, meta }` | Fired when a digital twin is saved |
+| `alert:updated` | Server → Client | `{ _id, status, resolvedAt }` | Fired when an alert is acknowledged or resolved |
