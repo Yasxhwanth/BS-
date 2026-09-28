@@ -161,20 +161,4 @@ router.post('/upload/excel', protect, upload.single('file'), async (req, res) =>
   }
 });
 
-// Download sample Excel file
-router.get('/data/sample-excel', (req, res) => {
-  const filePath = path.join(__dirname, '..', 'sample_manufacturing_data.xlsx');
-  res.download(filePath, 'sample_manufacturing_data.xlsx');
-});
-
-// Reset to default demo data
-router.post('/data/reset-demo', protect, async (req, res) => {
-  try {
-    await PlantData.deleteMany({ userId: req.user._id });
-    res.json({ success: true, message: 'Reset to demo dataset successfully' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
 module.exports = router;
