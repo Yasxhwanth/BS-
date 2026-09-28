@@ -34,7 +34,7 @@ export default function Login({ onLogin }) {
         <div className="auth-left-content">
           <div className="auth-brand">
             <div className="auth-brand-hex" />
-            <span className="auth-brand-name">ManufactureAIP</span>
+            <span className="auth-brand-name">SmartFactory</span>
           </div>
           <h1 className="auth-tagline">
             AI-Powered<br />Manufacturing<br />Intelligence

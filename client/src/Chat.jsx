@@ -444,7 +444,7 @@ export default function Chat({ user }) {
             </div>
 
             <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>
-              ManufactureAIP uses Google Gemini to answer questions with full contextual awareness of your plant's Knowledge Graph, live sensor data, and active alerts.
+              SmartFactory uses Google Gemini to answer questions with full contextual awareness of your plant's Knowledge Graph, live sensor data, and active alerts.
             </p>
 
             <form onSubmit={handleSaveConfig}>

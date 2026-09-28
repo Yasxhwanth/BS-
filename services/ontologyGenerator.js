@@ -65,13 +65,13 @@ const generateOntology = (nodes, edges) => {
 
   return {
     '@context': {
-      mfg: 'http://manufacturing-aip.io/ontology#',
+      mfg: 'http://smartfactory.io/ontology#',
       owl: 'http://www.w3.org/2002/07/owl#',
       rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
       rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
     },
     '@graph': [
-      { '@id': 'mfg:ManufacturingOntology', '@type': 'owl:Ontology', 'rdfs:label': 'Manufacturing AI Platform Ontology' },
+      { '@id': 'mfg:ManufacturingOntology', '@type': 'owl:Ontology', 'rdfs:label': 'Smart Factory Digital Twin Ontology' },
       ...classes,
       ...objectProperties,
       ...individuals,

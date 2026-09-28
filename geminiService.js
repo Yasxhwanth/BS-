@@ -99,7 +99,7 @@ function buildPlantContext({ ontology, alerts = [], plantData = null, user = nul
 
   return `
 SYSTEM PERSONA & INSTRUCTIONS:
-You are the AI Manufacturing Copilot for "ManufactureAIP", a state-of-the-art smart factory and industrial knowledge graph analytics platform.
+You are the AI Manufacturing Copilot for "SmartFactory", a state-of-the-art smart factory and industrial knowledge graph analytics platform.
 You are assisting ${user?.name ? `${user.name} (${user.role} in ${user.department})` : 'a plant engineer'}.
 
 LIVE PLANT KNOWLEDGE GRAPH & TELEMETRY:

@@ -98,10 +98,10 @@ export default function App() {
         <header className="app-header">
           <a href="/" className="brand">
             <div className="brand-icon" />
-            ManufactureAIP
+            SmartFactory
           </a>
           <div style={{ fontSize: 11, color: 'var(--text-helper)', marginLeft: 8 }}>
-            Manufacturing AI Platform
+            Smart Manufacturing Platform
           </div>
           <div className="header-spacer" />
           <div className="user-badge">
