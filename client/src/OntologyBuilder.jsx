@@ -24,11 +24,36 @@ const SUBS = {
   department: ['Production','Maintenance','Quality Assurance','Logistics','Management'],
 };
 
+// Per-relationship edge colours + glow
+const REL_EDGE = {
+  monitors:    { color: '#3ddbd9', animated: true  },
+  feeds_into:  { color: '#0f62fe', animated: false },
+  produces:    { color: '#42be65', animated: false },
+  operated_by: { color: '#f1c21b', animated: false },
+  belongs_to:  { color: '#be95ff', animated: false },
+  requires:    { color: '#ff832b', animated: false },
+  part_of:     { color: '#fa4d56', animated: false },
+  managed_by:  { color: '#be95ff', animated: false },
+  inspects:    { color: '#42be65', animated: true  },
+  custom:      { color: '#78a9ff', animated: false },
+};
+
+const makeEdgeStyle = (relValue) => {
+  const r = REL_EDGE[relValue] || REL_EDGE.custom;
+  return {
+    type: 'smoothstep',
+    animated: r.animated,
+    style: { stroke: r.color, strokeWidth: 2.5, filter: `drop-shadow(0 0 4px ${r.color}88)` },
+    labelStyle: { fill: r.color, fontSize: 10, fontWeight: 600 },
+    labelBgStyle: { fill: 'var(--bg-secondary, #262626)', fillOpacity: 0.9 },
+    markerEnd: { type: 'arrowclosed', color: r.color, width: 14, height: 14 },
+  };
+};
+
 const EDGE_OPTS = {
   type: 'smoothstep',
-  style: { stroke: '#525252', strokeWidth: 2 },
-  labelStyle: { fill: '#c6c6c6', fontSize: 11 },
-  labelBgStyle: { fill: '#262626', fillOpacity: 0.85 },
+  style: { stroke: 'var(--blue-40, #4589ff)', strokeWidth: 2 },
+  markerEnd: { type: 'arrowclosed', color: 'var(--blue-40, #4589ff)', width: 14, height: 14 },
 };
 
 function MfgNode({ data }) {
@@ -97,7 +122,7 @@ export default function OntologyBuilder() {
 
   const onConnect = useCallback((p) => {
     const rel = RELATIONSHIPS.find(r => r.value === selRel);
-    setEdges(es => addEdge({ ...p, ...EDGE_OPTS, id: `e-${Date.now()}`, label: rel?.label || 'related', animated: selRel === 'monitors' }, es));
+    setEdges(es => addEdge({ ...p, ...makeEdgeStyle(selRel), id: `e-${Date.now()}`, label: rel?.label || 'related' }, es));
   }, [selRel, setEdges]);
 
   const addNode = () => {
@@ -126,10 +151,22 @@ export default function OntologyBuilder() {
 
   const handleExport = async () => {
     try {
-      const { data } = await exportOntology();
-      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([JSON.stringify(data,null,2)], { type:'application/json' })), download: 'ontology.json' });
+      let exportData;
+      try {
+        const { data } = await exportOntology();
+        exportData = data;
+      } catch {
+        exportData = { nodes, edges, exportedAt: new Date().toISOString() };
+      }
+      const a = Object.assign(document.createElement('a'), {
+        href: URL.createObjectURL(new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })),
+        download: 'ontology.json',
+      });
       a.click();
-    } catch { notify('Save first before exporting.', 'error'); }
+      notify('Exported ontology.json successfully.', 'success');
+    } catch (e) {
+      notify('Export failed: ' + e.message, 'error');
+    }
   };
 
   const handleUpload = async (e) => {
@@ -148,7 +185,7 @@ export default function OntologyBuilder() {
     }
     if (extra.length) {
       const all = autoLayoutNodes([...nodes, ...extra]);
-      const built = buildAutoRelationships(all);
+      const built = colorEdges(buildAutoRelationships(all));
       setNodes(all); setEdges(built);
       notify(`Imported ${extra.length} nodes, built ${built.length} edges.`, 'success');
     }
@@ -170,6 +207,9 @@ export default function OntologyBuilder() {
   const openNode = (_, n) => { setSelNode(n); setInspOpen(true); };
   const closeInsp = () => { setSelNode(null); setInspOpen(false); };
 
+  // Apply colour/glow styles to auto-built edges
+  const colorEdges = (rawEdges) => rawEdges.map(e => ({ ...e, ...makeEdgeStyle(e.relationship || e.data?.relationship || 'custom') }));
+
   const bannerColor = { error:'#da1e28', success:'#42be65', info:'#0f62fe' };
 
   return (
@@ -183,7 +223,7 @@ export default function OntologyBuilder() {
         {[
           { icon:<Upload size={14}/>, label:'Upload', onClick:()=>uploadRef.current?.click() },
           { icon:<Layers size={14}/>, label:'Load Mock', onClick:()=>loadMock(false) },
-          { icon:<ConnectionSignal size={14}/>, label:'Auto-Relate', onClick:()=>{ if(nodes.length<2){notify('Need 2+ nodes','error');return;} const b=buildAutoRelationships(nodes);setEdges(b);notify(`Built ${b.length} edges.`,'success'); }, style:{ borderColor:'var(--teal-40)', color:'var(--teal-40)' } },
+          { icon:<ConnectionSignal size={14}/>, label:'Auto-Relate', onClick:()=>{ if(nodes.length<2){notify('Need 2+ nodes','error');return;} const b=colorEdges(buildAutoRelationships(nodes));setEdges(b);notify(`Built ${b.length} edges.`,'success'); }, style:{ borderColor:'var(--teal-40)', color:'var(--teal-40)' } },
           { icon:<Grid size={14}/>, label:'Arrange', onClick:()=>{ setNodes(autoLayoutNodes(nodes)); } },
           { icon:<Reset size={14}/>, label:'Clear', onClick:()=>{ if(window.confirm('Clear canvas?')){ setNodes([]);setEdges([]);closeInsp(); } }, style:{ color:'var(--support-error)', borderColor:'var(--support-error)' } },
           { icon:<Download size={14}/>, label:'Export', onClick:handleExport },

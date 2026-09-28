@@ -230,3 +230,28 @@ html, body, #root { height: 100%; background: var(--bg-primary); color: var(--te
 .spinner { width:24px; height:24px; border:2px solid var(--border-subtle); border-top-color:var(--blue-60); border-radius:50%; animation:spin 0.8s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg)} }
 .notif-dot { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; background:var(--support-error); color:#fff; border-radius:50%; font-size:10px; font-weight:600; }
+
+/* ── Light Mode ── */
+[data-theme="light"] {
+  --bg-primary:   #f4f4f4;
+  --bg-secondary: #ffffff;
+  --bg-tertiary:  #e0e0e0;
+  --bg-hover:     #c6c6c6;
+  --text-primary:   #161616;
+  --text-secondary: #525252;
+  --text-helper:    #8d8d8d;
+  --border-subtle:  #c6c6c6;
+  --border-strong:  #8d8d8d;
+  color-scheme: light;
+}
+[data-theme="light"] html,
+[data-theme="light"] body,
+[data-theme="light"] #root { background: var(--bg-primary); }
+[data-theme="light"] .app-header { background: #161616; }
+[data-theme="light"] .app-header .brand { color: #f4f4f4; }
+[data-theme="light"] .app-header .user-badge { background: #262626; color: #c6c6c6; }
+[data-theme="light"] .react-flow__background { background: #e8e8e8; }
+[data-theme="light"] .rf-node { background: #ffffff; }
+[data-theme="light"] .rf-node-label { color: #161616; }
+[data-theme="light"] .rf-node-sub   { color: #525252; }
+[data-theme="light"] .rf-node-badge { background: rgba(0,0,0,0.06); color: #525252; }

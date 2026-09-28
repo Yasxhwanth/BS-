@@ -4,532 +4,319 @@ import { Bot, SendAlt, Renew, Settings, Checkmark, Close, Flash, WarningAlt } fr
 
 const SUGGESTIONS = [
   'Analyze overall plant OEE and bottlenecks',
-  'Assess vibration sensor anomaly risk on Process nodes',
-  'How can we optimize Assembly Process throughput?',
+  'Assess vibration sensor anomaly risk',
+  'How to optimize Assembly Process throughput?',
   'Predict failure probability for critical machines',
   'Correlate worker shifts with defect rates',
-  'Explain graph relationships between sensors and products',
 ];
 
-// Lightweight Markdown & Inline Formatter for Gemini Responses
 function FormattedMessage({ content }) {
   if (!content) return null;
-
   const lines = content.split('\n');
-  const elements = [];
+  const out = [];
   let listItems = [];
-  let key = 0;
+  let k = 0;
 
   const flushList = () => {
-    if (listItems.length > 0) {
-      elements.push(
-        <ul key={`ul-${key++}`} style={{ margin: '6px 0 10px 20px', paddingLeft: 0, listStyleType: 'disc' }}>
-          {listItems.map((li, idx) => (
-            <li key={idx} style={{ marginBottom: 4, lineHeight: 1.5 }}>{renderInline(li)}</li>
-          ))}
-        </ul>
-      );
-      listItems = [];
-    }
+    if (!listItems.length) return;
+    out.push(
+      <ul key={`ul-${k++}`} style={{ margin:'4px 0 10px 16px', paddingLeft:0 }}>
+        {listItems.map((li, i) => <li key={i} style={{ marginBottom:3, lineHeight:1.5 }}>{inline(li)}</li>)}
+      </ul>
+    );
+    listItems = [];
   };
 
-  const renderInline = (str) => {
+  const inline = (str) => {
     const parts = [];
-    const regex = /(\*\*[^*]+\*\*|`[^`]+`)/g;
-    let match;
-    let lastIndex = 0;
-    let idx = 0;
-
-    while ((match = regex.exec(str)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(str.substring(lastIndex, match.index));
-      }
-      const token = match[0];
-      if (token.startsWith('**') && token.endsWith('**')) {
-        parts.push(
-          <strong key={idx++} style={{ color: 'var(--blue-40)', fontWeight: 600 }}>
-            {token.slice(2, -2)}
-          </strong>
-        );
-      } else if (token.startsWith('`') && token.endsWith('`')) {
-        parts.push(
-          <code
-            key={idx++}
-            style={{
-              background: 'rgba(255,255,255,0.08)',
-              padding: '2px 6px',
-              borderRadius: 3,
-              fontSize: '0.9em',
-              color: 'var(--teal-40)',
-            }}
-          >
-            {token.slice(1, -1)}
-          </code>
-        );
-      }
-      lastIndex = match.index + token.length;
+    const re = /(\*\*[^*]+\*\*|`[^`]+`)/g;
+    let last = 0, m, i = 0;
+    while ((m = re.exec(str)) !== null) {
+      if (m.index > last) parts.push(str.slice(last, m.index));
+      const t = m[0];
+      if (t.startsWith('**')) parts.push(<strong key={i++} style={{ color:'var(--blue-40)' }}>{t.slice(2,-2)}</strong>);
+      else parts.push(<code key={i++} style={{ background:'var(--bg-tertiary)', padding:'1px 5px', fontSize:'0.9em', color:'var(--teal-40)' }}>{t.slice(1,-1)}</code>);
+      last = m.index + t.length;
     }
-    if (lastIndex < str.length) {
-      parts.push(str.substring(lastIndex));
-    }
-    return parts.length > 0 ? parts : str;
+    if (last < str.length) parts.push(str.slice(last));
+    return parts.length ? parts : str;
   };
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmed = line.trim();
-
-    if (!trimmed) {
-      flushList();
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t) { flushList(); continue; }
+    if (t.startsWith('* ') || t.startsWith('- ') || t.startsWith('• ') || /^\d+\.\s/.test(t)) {
+      listItems.push(t.replace(/^(\*|-|•|\d+\.)\s+/, ''));
       continue;
     }
-
-    // Bullet list items
-    if (trimmed.startsWith('* ') || trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
-      listItems.push(trimmed.replace(/^(\*|-|•)\s+/, ''));
-      continue;
-    }
-
-    // Numbered list items
-    if (/^\d+\.\s+/.test(trimmed)) {
-      listItems.push(trimmed.replace(/^\d+\.\s+/, ''));
-      continue;
-    }
-
     flushList();
-
-    // Headers
-    if (trimmed.startsWith('### ')) {
-      elements.push(
-        <h4 key={key++} style={{ margin: '12px 0 6px 0', color: 'var(--text-primary)', fontSize: 14, fontWeight: 600 }}>
-          {renderInline(trimmed.replace(/^###\s+/, ''))}
-        </h4>
-      );
-    } else if (trimmed.startsWith('## ') || trimmed.startsWith('# ')) {
-      elements.push(
-        <h3 key={key++} style={{ margin: '14px 0 8px 0', color: 'var(--text-primary)', fontSize: 15, fontWeight: 600 }}>
-          {renderInline(trimmed.replace(/^#+\s+/, ''))}
-        </h3>
-      );
-    } else {
-      elements.push(
-        <p key={key++} style={{ margin: '0 0 8px 0', lineHeight: 1.6 }}>
-          {renderInline(trimmed)}
-        </p>
-      );
-    }
+    if (t.startsWith('### ')) out.push(<h4 key={k++} style={{ margin:'12px 0 4px', fontSize:13, fontWeight:600, color:'var(--text-primary)', textTransform:'uppercase', letterSpacing:'0.5px' }}>{inline(t.slice(4))}</h4>);
+    else if (t.startsWith('## ') || t.startsWith('# ')) out.push(<h3 key={k++} style={{ margin:'12px 0 6px', fontSize:14, fontWeight:600, color:'var(--text-primary)' }}>{inline(t.replace(/^#+\s/,''))}</h3>);
+    else out.push(<p key={k++} style={{ margin:'0 0 6px', lineHeight:1.6 }}>{inline(t)}</p>);
   }
   flushList();
-
-  return <div>{elements}</div>;
+  return <div>{out}</div>;
 }
 
+// --- Carbon: strict component styles ---
+const C = {
+  headerBar: {
+    padding: '0 32px', height: 48, display:'flex', alignItems:'center', justifyContent:'space-between',
+    background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-subtle)', flexShrink: 0,
+  },
+  label: {
+    fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.8px', color:'var(--text-helper)',
+  },
+  tile: {
+    background:'var(--bg-secondary)', border:'1px solid var(--border-subtle)', borderRadius:0,
+  },
+  tag: (color) => ({
+    display:'inline-flex', alignItems:'center', gap:4, padding:'2px 8px',
+    fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.5px',
+    background:`${color}18`, border:`1px solid ${color}55`, color,
+  }),
+};
+
 export default function Chat({ user }) {
-  const [messages, setMessages]       = useState([]);
-  const [input, setInput]             = useState('');
-  const [loading, setLoading]         = useState(false);
-  const [convId, setConvId]           = useState(() => `conv_${Date.now()}`);
-  const [aiStatus, setAiStatus]       = useState({ configured: false, model: 'gemini-1.5-flash' });
-  const [showConfig, setShowConfig]   = useState(false);
-  const [apiKeyInput, setApiKeyInput] = useState('');
-  const [modelSelect, setModelSelect] = useState('gemini-1.5-flash');
-  const [configSaving, setConfigSaving] = useState(false);
-  const [configMsg, setConfigMsg]     = useState(null);
+  const [messages, setMessages]   = useState([]);
+  const [input, setInput]         = useState('');
+  const [loading, setLoading]     = useState(false);
+  const [convId, setConvId]       = useState(() => `conv_${Date.now()}`);
+  const [aiStatus, setAiStatus]   = useState({ configured: false, model:'gemini-1.5-flash' });
+  const [showCfg, setShowCfg]     = useState(false);
+  const [apiKey, setApiKey]       = useState('');
+  const [model, setModel]         = useState('gemini-1.5-flash');
+  const [cfgSaving, setCfgSaving] = useState(false);
+  const [cfgMsg, setCfgMsg]       = useState(null);
   const bottomRef = useRef(null);
 
-  // Load AI configuration status
   useEffect(() => {
-    getChatStatus()
-      .then(res => {
-        if (res.data?.success) {
-          setAiStatus(res.data.data);
-          if (res.data.data.model) setModelSelect(res.data.data.model);
-        }
-      })
-      .catch(() => {});
+    getChatStatus().then(r => { if (r.data?.success) { setAiStatus(r.data.data); if (r.data.data.model) setModel(r.data.data.model); } }).catch(() => {});
   }, []);
 
   useEffect(() => {
-    // Welcome message
-    const isGemini = aiStatus.configured;
     setMessages([{
-      _id: 'welcome',
-      role: 'assistant',
-      content: `Hello ${user?.name || 'there'}! I'm your Manufacturing AI Copilot, powered by Google Gemini and grounded in your live Knowledge Graph (Ontology), telemetry, and plant alerts.\n\nAsk me anything about maintenance schedules, sensor anomalies, OEE optimization, or workforce management!`,
+      _id: 'welcome', role:'assistant',
+      content: `Hello ${user?.name||'there'}! I'm your Manufacturing AI Copilot — grounded in your live Knowledge Graph, sensor telemetry, and plant alerts.\n\nAsk me about maintenance schedules, sensor anomalies, OEE optimization, or workforce management.`,
       createdAt: new Date().toISOString(),
-      meta: {
-        intent: 'welcome',
-        confidence: 100,
-        model: isGemini ? (aiStatus.model || 'gemini-1.5-flash') : 'simulated-engine',
-        source: isGemini ? 'gemini' : 'simulation',
-      },
+      meta: { intent:'welcome', confidence:100, model: aiStatus.configured?(aiStatus.model||'gemini-1.5-flash'):'simulated-engine', source: aiStatus.configured?'gemini':'simulation' },
     }]);
   }, [user, aiStatus.configured]);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:'smooth' }); }, [messages]);
 
   const send = async (text) => {
     const msg = (text || input).trim();
     if (!msg || loading) return;
     setInput('');
-
-    const userMsg = { _id: Date.now(), role: 'user', content: msg, createdAt: new Date().toISOString() };
-    setMessages(ms => [...ms, userMsg]);
+    setMessages(ms => [...ms, { _id:Date.now(), role:'user', content:msg, createdAt:new Date().toISOString() }]);
     setLoading(true);
-
     try {
-      const { data } = await sendChat({ message: msg, conversationId: convId });
+      const { data } = await sendChat({ message:msg, conversationId:convId });
       setConvId(data.data.conversationId);
-      setMessages(ms => [...ms, {
-        _id: data.data.message._id,
-        role: 'assistant',
-        content: data.data.content,
-        createdAt: data.data.message.createdAt,
-        meta: {
-          intent: data.data.intent,
-          confidence: data.data.confidence,
-          model: data.data.model,
-          source: data.data.source,
-        },
-      }]);
+      setMessages(ms => [...ms, { _id:data.data.message._id, role:'assistant', content:data.data.content, createdAt:data.data.message.createdAt, meta:{ intent:data.data.intent, confidence:data.data.confidence, model:data.data.model, source:data.data.source } }]);
     } catch {
-      setMessages(ms => [...ms, {
-        _id: Date.now() + 1,
-        role: 'assistant',
-        content: 'Error: Unable to reach AI service. Please verify that the backend server is running.',
-        createdAt: new Date().toISOString(),
-      }]);
-    } finally {
-      setLoading(false);
-    }
+      setMessages(ms => [...ms, { _id:Date.now()+1, role:'assistant', content:'Error: Unable to reach AI service. Check that the backend server is running.', createdAt:new Date().toISOString() }]);
+    } finally { setLoading(false); }
   };
 
-  const handleSaveConfig = async (e) => {
+  const saveCfg = async (e) => {
     e.preventDefault();
-    if (!apiKeyInput.trim()) return;
-    setConfigSaving(true);
-    setConfigMsg(null);
-
+    if (!apiKey.trim()) return;
+    setCfgSaving(true); setCfgMsg(null);
     try {
-      const res = await saveGeminiConfig({ apiKey: apiKeyInput.trim(), model: modelSelect });
-      if (res.data?.success) {
-        setAiStatus(res.data.data);
-        setConfigMsg({ type: 'success', text: 'Gemini API Key configured successfully!' });
-        setTimeout(() => {
-          setShowConfig(false);
-          setConfigMsg(null);
-        }, 1500);
-      }
-    } catch (err) {
-      setConfigMsg({ type: 'error', text: err.response?.data?.message || 'Failed to update Gemini config' });
-    } finally {
-      setConfigSaving(false);
-    }
+      const r = await saveGeminiConfig({ apiKey:apiKey.trim(), model });
+      if (r.data?.success) { setAiStatus(r.data.data); setCfgMsg({ ok:true, text:'Gemini API key saved.' }); setTimeout(() => { setShowCfg(false); setCfgMsg(null); }, 1400); }
+    } catch (err) { setCfgMsg({ ok:false, text:err.response?.data?.message||'Failed to save config.' }); }
+    finally { setCfgSaving(false); }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)' }}>
-      {/* Header */}
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Bot size={24} style={{ color: 'var(--teal-40)' }} />
-            <span>AI Assistant</span>
-            {aiStatus.configured ? (
-              <div
-                className="chat-ai-badge"
-                style={{
-                  fontSize: 12,
-                  background: 'rgba(0, 166, 126, 0.15)',
-                  border: '1px solid var(--teal-40)',
-                  padding: '3px 8px',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                }}
-                onClick={() => setShowConfig(true)}
-                title="Click to view Gemini settings"
-              >
-                <Flash size={13} style={{ color: 'var(--teal-40)' }} />
-                <span>Google Gemini ({aiStatus.model || 'gemini-1.5-flash'})</span>
-              </div>
-            ) : (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontSize: 12,
-                  background: 'rgba(241, 194, 27, 0.12)',
-                  border: '1px solid rgba(241, 194, 27, 0.4)',
-                  color: '#f1c21b',
-                  padding: '3px 8px',
-                  borderRadius: 4,
-                }}
-              >
-                <WarningAlt size={13} />
-                <span>Simulated Mode (Add Gemini Key)</span>
-              </div>
-            )}
-          </h1>
-          <p>Industrial intelligence grounded in your plant's Knowledge Graph, live sensors, and alerts</p>
-        </div>
+    <div style={{ display:'flex', flexDirection:'column', height:'calc(100vh - 48px)', background:'var(--bg-primary)' }}>
 
-        {/* Gemini Settings Button */}
-        <div>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => setShowConfig(true)}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-          >
-            <Settings size={14} />
-            <span>{aiStatus.configured ? 'Gemini Config' : 'Connect Gemini API'}</span>
+      {/* ── Carbon Header bar ── */}
+      <div style={C.headerBar}>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <Bot size={20} style={{ color:'var(--blue-40)' }}/>
+          <div>
+            <div style={{ fontSize:14, fontWeight:600, color:'var(--text-primary)', lineHeight:1.2 }}>AI Assistant</div>
+            <div style={{ ...C.label, fontSize:10 }}>Manufacturing Intelligence Copilot</div>
+          </div>
+          {aiStatus.configured
+            ? <div onClick={() => setShowCfg(true)} title="Click to configure" role="button" style={{ ...C.tag('var(--teal-40)'), cursor:'pointer' }}>
+                <Flash size={11}/> Gemini · {aiStatus.model||'Flash'}
+              </div>
+            : <div style={C.tag('var(--support-warning)')}>
+                <WarningAlt size={11}/> Simulated Engine
+              </div>
+          }
+        </div>
+        <div style={{ display:'flex', gap:8 }}>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowCfg(true)}
+            style={{ display:'inline-flex', alignItems:'center', gap:6, borderRadius:0 }}>
+            <Settings size={14}/> {aiStatus.configured ? 'Gemini Config' : 'Connect Gemini'}
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={() => { setConvId(`conv_${Date.now()}`); setMessages([]); }}
+            style={{ display:'inline-flex', alignItems:'center', gap:6, borderRadius:0 }}>
+            <Renew size={14}/> New Chat
           </button>
         </div>
       </div>
 
-      {/* Suggestions */}
-      <div style={{ padding: '10px 24px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)' }}>
-        <div className="chat-suggestions" style={{ marginBottom: 0 }}>
-          {SUGGESTIONS.map(s => (
-            <button key={s} className="suggestion-chip" onClick={() => send(s)}>
-              {s}
-            </button>
-          ))}
-        </div>
+      {/* ── Suggestion chips (Carbon tag row) ── */}
+      <div style={{ display:'flex', gap:4, flexWrap:'wrap', padding:'8px 32px', background:'var(--bg-secondary)', borderBottom:'1px solid var(--border-subtle)', flexShrink:0 }}>
+        <span style={{ ...C.label, alignSelf:'center', marginRight:4, whiteSpace:'nowrap' }}>Try:</span>
+        {SUGGESTIONS.map(s => (
+          <button key={s} onClick={() => send(s)}
+            style={{ background:'var(--bg-primary)', border:'1px solid var(--border-subtle)', color:'var(--text-secondary)', fontSize:12, padding:'4px 10px', cursor:'pointer', borderRadius:0, transition:'all 0.15s', whiteSpace:'nowrap' }}
+            onMouseEnter={e => { e.target.style.borderColor='var(--blue-60)'; e.target.style.color='var(--blue-40)'; }}
+            onMouseLeave={e => { e.target.style.borderColor='var(--border-subtle)'; e.target.style.color='var(--text-secondary)'; }}
+          >{s}</button>
+        ))}
       </div>
 
-      {/* Messages Feed */}
-      <div className="chat-messages" style={{ flex: 1 }}>
-        {messages.map(msg => (
-          <div key={msg._id} className={`chat-msg ${msg.role}`}>
-            <div className={`chat-avatar ${msg.role === 'assistant' ? 'ai' : 'user'}`} style={msg.role === 'assistant' && msg.meta?.source === 'gemini' ? { background: 'var(--teal-60)' } : {}}>
-              {msg.role === 'assistant' ? (msg.meta?.source === 'gemini' ? 'G' : 'AI') : (user?.name?.[0] || 'U')}
-            </div>
-            <div style={{ maxWidth: '85%' }}>
-              <div className="chat-bubble">
-                {msg.role === 'assistant' ? <FormattedMessage content={msg.content} /> : msg.content}
+      {/* ── Messages ── */}
+      <div style={{ flex:1, overflowY:'auto', padding:'24px 32px', display:'flex', flexDirection:'column', gap:0 }}>
+        {messages.map(msg => {
+          const isAI = msg.role === 'assistant';
+          return (
+            <div key={msg._id} style={{ display:'flex', gap:12, marginBottom:24, flexDirection:isAI?'row':'row-reverse' }}>
+              {/* Avatar — Carbon style square */}
+              <div style={{
+                width:32, height:32, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
+                background: isAI ? (msg.meta?.source==='gemini'?'var(--teal-60)':'var(--blue-60)') : 'var(--bg-tertiary)',
+                color:'#fff', fontSize:12, fontWeight:700, fontFamily:'IBM Plex Mono,monospace',
+                border:'1px solid var(--border-strong)',
+              }}>
+                {isAI ? (msg.meta?.source==='gemini'?'G':'AI') : (user?.name?.[0]?.toUpperCase()||'U')}
               </div>
-              <div className="chat-meta" style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                {msg.role === 'assistant' && (
-                  <>
-                    <span
-                      style={{
-                        padding: '1px 6px',
-                        borderRadius: 3,
-                        background: msg.meta?.source === 'gemini' ? 'rgba(0, 166, 126, 0.2)' : 'rgba(15, 98, 254, 0.2)',
-                        color: msg.meta?.source === 'gemini' ? 'var(--teal-40)' : 'var(--blue-40)',
-                        fontSize: 10,
-                        fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      {msg.meta?.source === 'gemini' ? (msg.meta?.model || 'Gemini') : 'Simulated Engine'}
-                    </span>
-                    {msg.meta?.intent && (
-                      <span style={{ color: 'var(--text-helper)' }}>
-                        Intent: {msg.meta.intent} ({msg.meta.confidence || 95}%)
-                      </span>
-                    )}
-                  </>
-                )}
-                <span style={{ marginLeft: 'auto', color: 'var(--text-helper)' }}>
-                  {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
 
-        {loading && (
-          <div className="chat-msg assistant">
-            <div className="chat-avatar ai" style={{ background: 'var(--teal-60)' }}>G</div>
-            <div>
-              <div className="chat-bubble" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  {[0, 1, 2].map(i => (
-                    <div
-                      key={i}
-                      style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: '50%',
-                        background: 'var(--teal-40)',
-                        animation: `pulse 1s ${i * 0.2}s infinite`,
-                      }}
-                    />
-                  ))}
+              <div style={{ flex:1, maxWidth:'78%' }}>
+                {/* Bubble — flat Carbon tile */}
+                <div style={{
+                  ...C.tile,
+                  padding:'12px 16px',
+                  background: isAI ? 'var(--bg-secondary)' : 'var(--bg-tertiary)',
+                  borderLeft: isAI ? '2px solid var(--blue-60)' : 'none',
+                  fontSize:13, lineHeight:1.6, color:'var(--text-primary)',
+                }}>
+                  {isAI ? <FormattedMessage content={msg.content}/> : msg.content}
                 </div>
-                <span>Gemini is analyzing your ontology and live telemetry…</span>
+                {/* Meta row */}
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:4, padding:'0 2px' }}>
+                  {isAI && msg.meta?.source && (
+                    <span style={{ ...C.label, fontSize:10, color: msg.meta.source==='gemini'?'var(--teal-40)':'var(--blue-40)' }}>
+                      {msg.meta.source==='gemini' ? (msg.meta.model||'Gemini') : 'Simulated'}
+                    </span>
+                  )}
+                  {isAI && msg.meta?.intent && msg.meta.intent !== 'welcome' && (
+                    <span style={{ fontSize:10, color:'var(--text-helper)' }}>· {msg.meta.intent} ({msg.meta.confidence||95}%)</span>
+                  )}
+                  <span style={{ fontSize:10, color:'var(--text-helper)', marginLeft:'auto' }}>
+                    {new Date(msg.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+                  </span>
+                </div>
               </div>
+            </div>
+          );
+        })}
+
+        {/* Thinking indicator */}
+        {loading && (
+          <div style={{ display:'flex', gap:12, marginBottom:24 }}>
+            <div style={{ width:32, height:32, flexShrink:0, background:'var(--teal-60)', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:12, fontWeight:700, border:'1px solid var(--border-strong)' }}>G</div>
+            <div style={{ ...C.tile, padding:'12px 16px', display:'flex', alignItems:'center', gap:10, fontSize:13, color:'var(--text-helper)' }}>
+              <div style={{ display:'flex', gap:4 }}>
+                {[0,1,2].map(i => <div key={i} style={{ width:5, height:5, borderRadius:'50%', background:'var(--blue-40)', animation:`pulse 1s ${i*0.2}s infinite` }}/>)}
+              </div>
+              Analyzing your ontology and telemetry…
             </div>
           </div>
         )}
-        <div ref={bottomRef} />
+        <div ref={bottomRef}/>
       </div>
 
-      {/* Input Area */}
-      <div className="chat-input-area">
+      {/* ── Input area — Carbon text input style ── */}
+      <div style={{ flexShrink:0, borderTop:'2px solid var(--blue-60)', background:'var(--bg-secondary)', padding:'12px 32px', display:'flex', gap:0 }}>
         <input
-          className="chat-input"
-          placeholder="Ask Gemini about maintenance, quality, sensors, OEE, bottlenecks…"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
+          value={input} onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key==='Enter' && !e.shiftKey && send()}
+          placeholder="Ask about maintenance, OEE, sensors, quality, bottlenecks…"
           disabled={loading}
-        />
-        <button
-          className="btn btn-primary"
-          onClick={() => send()}
-          disabled={loading || !input.trim()}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-        >
-          {loading ? <span className="spinner" style={{ width: 16, height: 16 }} /> : <><SendAlt size={16} /> Send</>}
-        </button>
-        <button
-          className="btn btn-secondary btn-sm"
-          title="New conversation"
-          onClick={() => {
-            setConvId(`conv_${Date.now()}`);
-            setMessages([]);
+          style={{
+            flex:1, background:'var(--bg-primary)', border:'none', borderBottom:'none',
+            padding:'12px 16px', fontSize:14, color:'var(--text-primary)',
+            fontFamily:'IBM Plex Sans,sans-serif', outline:'none',
+            borderRight:'1px solid var(--border-strong)',
           }}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-        >
-          <Renew size={14} /> New
+        />
+        <button className="btn btn-primary" onClick={() => send()} disabled={loading || !input.trim()}
+          style={{ borderRadius:0, padding:'12px 20px', display:'inline-flex', alignItems:'center', gap:6 }}>
+          {loading ? <span className="spinner" style={{width:14,height:14}}/> : <><SendAlt size={16}/> Send</>}
         </button>
       </div>
 
-      {/* Gemini Settings Modal */}
-      {showConfig && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.7)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: 16,
-          }}
-          onClick={() => setShowConfig(false)}
-        >
-          <div
-            style={{
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 4,
-              width: '100%',
-              maxWidth: 520,
-              padding: 24,
-              boxShadow: '0 12px 32px rgba(0, 0, 0, 0.6)',
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Flash size={20} style={{ color: 'var(--teal-40)' }} />
-                <h2 style={{ fontSize: 18, margin: 0 }}>Configure Google Gemini AI</h2>
+      {/* ── Gemini Config Modal — Carbon Modal style ── */}
+      {showCfg && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}
+          onClick={() => setShowCfg(false)}>
+          <div style={{ ...C.tile, width:'100%', maxWidth:480, boxShadow:'0 16px 48px rgba(0,0,0,0.7)', overflow:'hidden' }}
+            onClick={e => e.stopPropagation()}>
+            {/* Modal header — Carbon pattern */}
+            <div style={{ background:'var(--bg-tertiary)', padding:'16px 20px', borderBottom:'1px solid var(--border-subtle)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <Flash size={18} style={{ color:'var(--teal-40)' }}/>
+                <span style={{ fontSize:14, fontWeight:600, color:'var(--text-primary)' }}>Configure Google Gemini AI</span>
               </div>
-              <button
-                className="btn btn-secondary btn-sm btn-icon"
-                onClick={() => setShowConfig(false)}
-                style={{ padding: 4 }}
-              >
-                <Close size={16} />
+              <button onClick={() => setShowCfg(false)} style={{ background:'none', border:'none', color:'var(--text-secondary)', cursor:'pointer', display:'flex', padding:4 }}
+                onMouseEnter={e => e.currentTarget.style.background='var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.background='none'}>
+                <Close size={18}/>
               </button>
             </div>
 
-            <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>
-              SmartFactory uses Google Gemini to answer questions with full contextual awareness of your plant's Knowledge Graph, live sensor data, and active alerts.
-            </p>
+            <div style={{ padding:20 }}>
+              <p style={{ fontSize:13, color:'var(--text-secondary)', marginBottom:20, lineHeight:1.5 }}>
+                Connect a Gemini API key to enable contextual AI responses grounded in your plant's knowledge graph and live sensor data.
+              </p>
 
-            <form onSubmit={handleSaveConfig}>
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                  Gemini API Key
-                </label>
-                <input
-                  type="password"
-                  className="chat-input"
-                  style={{ width: '100%', boxSizing: 'border-box' }}
-                  placeholder="AIzaSy..."
-                  value={apiKeyInput}
-                  onChange={e => setApiKeyInput(e.target.value)}
-                  autoFocus
-                />
-                <div style={{ fontSize: 12, color: 'var(--text-helper)', marginTop: 6 }}>
-                  Need a key? Get one for free at{' '}
-                  <a
-                    href="https://aistudio.google.com/apikey"
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ color: 'var(--blue-40)', textDecoration: 'underline' }}
-                  >
-                    Google AI Studio
-                  </a>
+              <form onSubmit={saveCfg}>
+                <div style={{ marginBottom:16 }}>
+                  <label style={{ display:'block', ...C.label, marginBottom:6 }}>Gemini API Key</label>
+                  <input type="password" className="form-input" placeholder="AIzaSy…"
+                    value={apiKey} onChange={e => setApiKey(e.target.value)} autoFocus/>
+                  <p style={{ fontSize:11, color:'var(--text-helper)', marginTop:4 }}>
+                    Get a free key at{' '}
+                    <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" style={{ color:'var(--blue-40)' }}>Google AI Studio</a>
+                  </p>
                 </div>
-              </div>
 
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                  Gemini Model
-                </label>
-                <select
-                  className="chat-input"
-                  style={{ width: '100%', boxSizing: 'border-box', background: 'var(--bg-primary)' }}
-                  value={modelSelect}
-                  onChange={e => setModelSelect(e.target.value)}
-                >
-                  <option value="gemini-3.8-flash">gemini-3.8-flash (Latest Flash - Recommended)</option>
-                  <option value="gemini-flash-latest">gemini-flash-latest (Auto-Updating Flash)</option>
-                  <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-                  <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview (Deep Reasoning)</option>
-                </select>
-              </div>
-
-              {configMsg && (
-                <div
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: 4,
-                    fontSize: 13,
-                    marginBottom: 16,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    background: configMsg.type === 'success' ? 'rgba(0, 166, 126, 0.15)' : 'rgba(218, 30, 40, 0.15)',
-                    color: configMsg.type === 'success' ? 'var(--teal-40)' : 'var(--red-40)',
-                    border: `1px solid ${configMsg.type === 'success' ? 'var(--teal-40)' : 'var(--red-40)'}`,
-                  }}
-                >
-                  {configMsg.type === 'success' ? <Checkmark size={16} /> : <Close size={16} />}
-                  <span>{configMsg.text}</span>
+                <div style={{ marginBottom:20 }}>
+                  <label style={{ display:'block', ...C.label, marginBottom:6 }}>Model</label>
+                  <select className="form-select" value={model} onChange={e => setModel(e.target.value)}>
+                    <option value="gemini-3.8-flash">gemini-3.8-flash (Recommended)</option>
+                    <option value="gemini-flash-latest">gemini-flash-latest (Auto-update)</option>
+                    <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                    <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview (Deep reasoning)</option>
+                  </select>
                 </div>
-              )}
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowConfig(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={configSaving || !apiKeyInput.trim()}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                >
-                  {configSaving ? <span className="spinner" style={{ width: 14, height: 14 }} /> : <Checkmark size={14} />}
-                  <span>Save & Connect</span>
-                </button>
-              </div>
-            </form>
+                {cfgMsg && (
+                  <div style={{ padding:'10px 14px', marginBottom:16, borderLeft:`3px solid ${cfgMsg.ok?'var(--support-success)':'var(--support-error)'}`, background:'var(--bg-primary)', border:`1px solid ${cfgMsg.ok?'var(--support-success)':'var(--support-error)'}`, display:'flex', alignItems:'center', gap:8, fontSize:13, color:cfgMsg.ok?'var(--support-success)':'var(--support-error)' }}>
+                    {cfgMsg.ok ? <Checkmark size={14}/> : <Close size={14}/>}
+                    {cfgMsg.text}
+                  </div>
+                )}
+
+                {/* Carbon Modal footer */}
+                <div style={{ display:'flex', justifyContent:'flex-end', gap:0, borderTop:'1px solid var(--border-subtle)', paddingTop:16, marginTop:4 }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowCfg(false)} style={{ borderRadius:0 }}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" disabled={cfgSaving || !apiKey.trim()} style={{ borderRadius:0, display:'inline-flex', alignItems:'center', gap:6, marginLeft:1 }}>
+                    {cfgSaving ? <span className="spinner" style={{width:12,height:12}}/> : <Checkmark size={14}/>} Save & Connect
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

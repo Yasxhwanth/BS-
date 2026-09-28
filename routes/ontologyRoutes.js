@@ -53,12 +53,18 @@ router.post('/save', protect, async (req, res) => {
 router.get('/export', protect, async (req, res) => {
   try {
     const ontology = await Ontology.findOne({ createdBy: req.user._id });
-    if (!ontology) {
-      return res.status(404).json({ success: false, message: 'No ontology found' });
+    let exportData = ontology?.generatedOntology;
+    if (!exportData) {
+      try {
+        const mock = require('../mock_ontology_data.json');
+        exportData = generateOntology(mock.nodes || [], mock.edges || []);
+      } catch {
+        exportData = { nodes: [], edges: [], meta: { exportedAt: new Date().toISOString() } };
+      }
     }
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', 'attachment; filename=manufacturing-ontology.json');
-    res.json(ontology.generatedOntology);
+    res.json(exportData);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

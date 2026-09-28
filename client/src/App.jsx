@@ -7,19 +7,20 @@ import Analytics      from './Analytics';
 import Chat           from './Chat';
 import Alerts         from './Alerts';
 
-// ── Nav icons (inline SVG) ──────────────────────────────────
 const Icons = {
-  Dashboard:   <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 0h7v7H0V0zm9 0h7v7H9V0zM0 9h7v7H0V9zm9 0h7v7H9V9z"/></svg>,
-  Ontology:    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="4" cy="4" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="8" cy="12" r="2"/><path d="M4 4h8M4 4l4 8m4-8l-4 8" stroke="currentColor" strokeWidth="1.5" fill="none"/></svg>,
-  Analytics:   <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 16L5 9l3 4 3-8 5 5V16H0z"/></svg>,
-  Chat:        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 0h16v11H9l-4 5V11H0V0z"/></svg>,
-  Alerts:      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0L0 14h16L8 0zm0 5v5H7V5h1zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>,
-  Logout:      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6 2H2v12h4v-2H4V4h2V2zm4 3l4 3-4 3V9H6V7h4V5z"/></svg>,
+  Dashboard: <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 0h7v7H0V0zm9 0h7v7H9V0zM0 9h7v7H0V9zm9 0h7v7H9V9z"/></svg>,
+  Ontology:  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="4" cy="4" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="8" cy="12" r="2"/><path d="M4 4h8M4 4l4 8m4-8l-4 8" stroke="currentColor" strokeWidth="1.5" fill="none"/></svg>,
+  Analytics: <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 16L5 9l3 4 3-8 5 5V16H0z"/></svg>,
+  Chat:      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 0h16v11H9l-4 5V11H0V0z"/></svg>,
+  Alerts:    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0L0 14h16L8 0zm0 5v5H7V5h1zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>,
+  Logout:    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6 2H2v12h4v-2H4V4h2V2zm4 3l4 3-4 3V9H6V7h4V5z"/></svg>,
+  Sun:       <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2m10 0h2M3.2 3.2l1.4 1.4m6.8 6.8l1.4 1.4M12.8 3.2l-1.4 1.4M4.6 11.4L3.2 12.8" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg>,
+  Moon:      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6 2a6 6 0 100 12 6 6 0 000-12zm8 6A8 8 0 118 0a6 6 0 006 6z"/></svg>,
 };
 
 const NAV = [
-  { path: '/',          label: 'Dashboard',           icon: Icons.Dashboard  },
-  { path: '/ontology',  label: 'Digital Twin Studio', icon: Icons.Ontology },
+  { path: '/',          label: 'Dashboard',           icon: Icons.Dashboard },
+  { path: '/ontology',  label: 'Digital Twin Studio', icon: Icons.Ontology  },
   { path: '/analytics', label: 'Analytics',            icon: Icons.Analytics },
   { path: '/chat',      label: 'AI Assistant',         icon: Icons.Chat      },
   { path: '/alerts',    label: 'Alerts',               icon: Icons.Alerts    },
@@ -29,64 +30,41 @@ export default function App() {
   const [user, setUser] = useState(() => {
     try { return JSON.parse(localStorage.getItem('aip_user')); } catch { return null; }
   });
-
   const [sidebarWidth, setSidebarWidth] = useState(() => {
-    try {
-      const saved = localStorage.getItem('aip_sidebar_width');
-      return saved ? Math.min(Math.max(parseInt(saved, 10), 180), 480) : 256;
-    } catch {
-      return 256;
-    }
+    try { const s = localStorage.getItem('aip_sidebar_width'); return s ? Math.min(Math.max(parseInt(s,10),180),480) : 256; } catch { return 256; }
   });
   const [isResizing, setIsResizing] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem('aip_theme') || 'dark');
+
+  // Apply theme to <html>
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('aip_theme', theme);
+  }, [theme]);
 
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const onMove = (e) => {
       if (!isResizing) return;
-      const newWidth = Math.min(Math.max(e.clientX, 180), 480);
-      setSidebarWidth(newWidth);
-      try {
-        localStorage.setItem('aip_sidebar_width', newWidth);
-      } catch {}
+      const w = Math.min(Math.max(e.clientX, 180), 480);
+      setSidebarWidth(w);
+      try { localStorage.setItem('aip_sidebar_width', w); } catch {}
     };
-
-    const handleMouseUp = () => {
-      if (isResizing) {
-        setIsResizing(false);
-      }
-    };
-
+    const onUp = () => isResizing && setIsResizing(false);
     if (isResizing) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
       document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
     } else {
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     }
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); document.body.style.cursor=''; document.body.style.userSelect=''; };
   }, [isResizing]);
 
-  const handleDoubleClick = () => {
-    setSidebarWidth(256);
-    try {
-      localStorage.setItem('aip_sidebar_width', 256);
-    } catch {}
-  };
-
   const handleLogin  = (u) => setUser(u);
-  const handleLogout = () => {
-    localStorage.removeItem('aip_token');
-    localStorage.removeItem('aip_user');
-    setUser(null);
-  };
+  const handleLogout = () => { localStorage.removeItem('aip_token'); localStorage.removeItem('aip_user'); setUser(null); };
+  const toggleTheme  = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
 
   if (!user) return <Login onLogin={handleLogin} />;
 
@@ -94,15 +72,12 @@ export default function App() {
     <BrowserRouter>
       <div className="app-shell" style={{ gridTemplateColumns: `${sidebarWidth}px 1fr` }}>
 
-        {/* ── Header ── */}
         <header className="app-header">
           <a href="/" className="brand">
             <div className="brand-icon" />
             SmartFactory
           </a>
-          <div style={{ fontSize: 11, color: 'var(--text-helper)', marginLeft: 8 }}>
-            Smart Manufacturing Platform
-          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-helper)', marginLeft: 8 }}>Smart Manufacturing Platform</div>
           <div className="header-spacer" />
           <div className="user-badge">
             <span>{user.name}</span>
@@ -110,12 +85,20 @@ export default function App() {
             <span style={{ color: 'var(--text-helper)' }}>·</span>
             <span style={{ color: 'var(--text-helper)' }}>{user.department}</span>
           </div>
+          {/* Theme toggle */}
+          <button
+            className="btn btn-secondary btn-sm btn-icon"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            style={{ transition: 'all 0.3s' }}
+          >
+            {theme === 'dark' ? Icons.Sun : Icons.Moon}
+          </button>
           <button className="btn btn-secondary btn-sm btn-icon" onClick={handleLogout} title="Sign out">
             {Icons.Logout}
           </button>
         </header>
 
-        {/* ── Sidebar ── */}
         <aside className="sidebar">
           <div className="sidebar-section-label">Navigation</div>
           {NAV.map(n => (
@@ -128,23 +111,16 @@ export default function App() {
           <div style={{ flex: 1 }} />
           <div className="sidebar-section-label" style={{ marginTop: 32 }}>Platform</div>
           <div className="sidebar-item" style={{ fontSize: 12, color: 'var(--text-helper)' }}>
-            <span>v1.0.0</span>
-            <span>· MERN Stack</span>
+            <span>v1.0.0</span><span>· MERN Stack</span>
           </div>
-
-          {/* Resizer Handle */}
           <div
             className={`sidebar-resizer ${isResizing ? 'active' : ''}`}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setIsResizing(true);
-            }}
-            onDoubleClick={handleDoubleClick}
-            title="Drag to resize sidebar, double-click to reset"
+            onMouseDown={(e) => { e.preventDefault(); setIsResizing(true); }}
+            onDoubleClick={() => { setSidebarWidth(256); try { localStorage.setItem('aip_sidebar_width',256); } catch {} }}
+            title="Drag to resize, double-click to reset"
           />
         </aside>
 
-        {/* ── Main Content ── */}
         <main className="main-content">
           <Routes>
             <Route path="/"          element={<Dashboard user={user} />} />
@@ -155,7 +131,6 @@ export default function App() {
             <Route path="*"          element={<Navigate to="/" />} />
           </Routes>
         </main>
-
       </div>
     </BrowserRouter>
   );
