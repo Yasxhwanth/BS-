@@ -736,7 +736,7 @@ app.get('/api/chat/status', protect, async (req, res) => {
     data: {
       provider: 'gemini',
       configured: isGeminiConfigured(),
-      model: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
+      model: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
     },
   });
 });
@@ -744,7 +744,7 @@ app.get('/api/chat/status', protect, async (req, res) => {
 app.post('/api/chat/config', protect, async (req, res) => {
   try {
     const { apiKey, model } = req.body;
-    const modelToUse = model || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+    const modelToUse = model || process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 
     let validation = { valid: true };
     if (apiKey) {

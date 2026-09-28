@@ -484,9 +484,10 @@ export default function Chat({ user }) {
                   value={modelSelect}
                   onChange={e => setModelSelect(e.target.value)}
                 >
-                  <option value="gemini-1.5-flash">gemini-1.5-flash (Fastest, High Throughput - Recommended)</option>
-                  <option value="gemini-2.0-flash">gemini-2.0-flash (Next-Gen Flash)</option>
-                  <option value="gemini-1.5-pro">gemini-1.5-pro (Deep Reasoning & Analysis)</option>
+                  <option value="gemini-3.8-flash">gemini-3.8-flash (Latest Flash - Recommended)</option>
+                  <option value="gemini-flash-latest">gemini-flash-latest (Auto-Updating Flash)</option>
+                  <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                  <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview (Deep Reasoning)</option>
                 </select>
               </div>
 

@@ -149,14 +149,8 @@ async function askGemini({ message, history = [], ontology, alerts = [], plantDa
   }
 
   const apiKey = process.env.GEMINI_API_KEY.trim();
-  const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
-
   const systemInstruction = buildPlantContext({ ontology, alerts, plantData, user });
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: modelName,
-    systemInstruction,
-  });
 
   // Prepare multi-turn history for Gemini
   // Gemini expects alternation: user, model, user, model...
@@ -186,56 +180,75 @@ async function askGemini({ message, history = [], ontology, alerts = [], plantDa
     formattedHistory.pop();
   }
 
-  const chat = model.startChat({
-    history: formattedHistory,
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 1200,
-    },
-  });
+  const preferredModel = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const modelsToTry = [preferredModel, 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash'].filter((m, i, arr) => arr.indexOf(m) === i);
 
-  try {
-    const result = await chat.sendMessage(message);
-    const text = result.response.text();
+  let lastError = null;
 
-    // Detect basic intent from response or user query
-    let intent = 'manufacturing_intelligence';
-    const q = message.toLowerCase();
-    if (q.includes('maintenance') || q.includes('failure') || q.includes('repair')) intent = 'predictive_maintenance';
-    else if (q.includes('sensor') || q.includes('anomaly') || q.includes('temperature') || q.includes('vibration')) intent = 'sensor_telemetry';
-    else if (q.includes('quality') || q.includes('defect') || q.includes('scrap')) intent = 'quality_assurance';
-    else if (q.includes('efficiency') || q.includes('oee') || q.includes('bottleneck') || q.includes('production')) intent = 'production_optimization';
-    else if (q.includes('alert') || q.includes('warning') || q.includes('critical')) intent = 'alert_analysis';
+  for (const modelName of modelsToTry) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction,
+      });
 
-    return {
-      content: text,
-      intent,
-      confidence: 96,
-      model: modelName,
-      source: 'gemini',
-    };
-  } catch (err) {
-    let friendlyMessage = err.message;
-    let errorType = 'general_error';
+      const chat = model.startChat({
+        history: formattedHistory,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1200,
+        },
+      });
 
-    if (err.message.includes('402') || err.message.includes('prepayment') || err.message.includes('Payment Required')) {
-      errorType = 'prepayment_depleted';
-      friendlyMessage = 'Google AI Studio returned [402 Payment Required]: Prepayment credits for this Google Cloud project are depleted. To resolve this, create a free API key on a new project at https://aistudio.google.com/apikey or manage billing credits.';
-    } else if (err.message.includes('403') || err.message.includes('API_KEY_INVALID') || err.message.includes('PERMISSION_DENIED')) {
-      errorType = 'invalid_key';
-      friendlyMessage = 'Google Gemini API key is invalid or unauthorized.';
-    } else if (err.message.includes('404') || err.message.includes('not found')) {
-      errorType = 'model_not_found';
-      friendlyMessage = `Gemini model "${modelName}" was not found or is deprecated.`;
+      const result = await chat.sendMessage(message);
+      const text = result.response.text();
+
+      // Detect basic intent from response or user query
+      let intent = 'manufacturing_intelligence';
+      const q = message.toLowerCase();
+      if (q.includes('maintenance') || q.includes('failure') || q.includes('repair')) intent = 'predictive_maintenance';
+      else if (q.includes('sensor') || q.includes('anomaly') || q.includes('temperature') || q.includes('vibration')) intent = 'sensor_telemetry';
+      else if (q.includes('quality') || q.includes('defect') || q.includes('scrap')) intent = 'quality_assurance';
+      else if (q.includes('efficiency') || q.includes('oee') || q.includes('bottleneck') || q.includes('production')) intent = 'production_optimization';
+      else if (q.includes('alert') || q.includes('warning') || q.includes('critical')) intent = 'alert_analysis';
+
+      return {
+        content: text,
+        intent,
+        confidence: 98,
+        model: modelName,
+        source: 'gemini',
+      };
+    } catch (err) {
+      lastError = err;
+      // If error is a temporary 503 (high demand) or 404 (model not found), try next model
+      if (err.message.includes('503') || err.message.includes('404')) {
+        console.warn(`[Gemini AI] Model ${modelName} returned 503/404, attempting fallback model...`);
+        continue;
+      }
+      // For auth or billing errors (402/403), break immediately
+      break;
     }
-
-    console.error(`[Gemini AI Error - ${errorType}]:`, err.message);
-    return {
-      error: friendlyMessage,
-      errorType,
-      rawError: err.message,
-    };
   }
+
+  // If all attempts failed:
+  let friendlyMessage = lastError ? lastError.message : 'Unknown Gemini error';
+  let errorType = 'general_error';
+
+  if (lastError?.message.includes('402')) {
+    errorType = 'prepayment_depleted';
+    friendlyMessage = 'Google AI Studio returned [402 Payment Required]: Prepayment credits for this Google Cloud project are depleted. To resolve this, create a free API key on a new project at https://aistudio.google.com/apikey or manage billing credits.';
+  } else if (lastError?.message.includes('403')) {
+    errorType = 'invalid_key';
+    friendlyMessage = 'Google Gemini API key is invalid or unauthorized.';
+  }
+
+  console.error(`[Gemini AI Error - ${errorType}]:`, lastError?.message);
+  return {
+    error: friendlyMessage,
+    errorType,
+    rawError: lastError?.message,
+  };
 }
 
 // Validate API Key and Model with a quick ping
