@@ -1,0 +1,408 @@
+{
+  "name": "Manufacturing Ontology",
+  "description": "Mock manufacturing ontology with all entity types: Process, Sensor, Material, Worker, Product, Department",
+  "nodes": [
+    {
+      "id": "node-dept-1",
+      "type": "manufacturing",
+      "position": { "x": 80, "y": 60 },
+      "data": {
+        "label": "Production Dept",
+        "subtype": "Production",
+        "description": "Manages all production line activities",
+        "nodeType": "department",
+        "properties": { "headCount": 120, "shift": "24/7" }
+      }
+    },
+    {
+      "id": "node-dept-2",
+      "type": "manufacturing",
+      "position": { "x": 80, "y": 220 },
+      "data": {
+        "label": "Quality Assurance",
+        "subtype": "Quality Assurance",
+        "description": "Oversees product inspection and standards compliance",
+        "nodeType": "department",
+        "properties": { "headCount": 30, "standard": "ISO 9001" }
+      }
+    },
+    {
+      "id": "node-dept-3",
+      "type": "manufacturing",
+      "position": { "x": 80, "y": 380 },
+      "data": {
+        "label": "Maintenance Dept",
+        "subtype": "Maintenance",
+        "description": "Responsible for equipment upkeep and repair",
+        "nodeType": "department",
+        "properties": { "headCount": 20, "schedule": "Preventive + Reactive" }
+      }
+    },
+    {
+      "id": "node-dept-4",
+      "type": "manufacturing",
+      "position": { "x": 80, "y": 540 },
+      "data": {
+        "label": "Logistics Dept",
+        "subtype": "Logistics",
+        "description": "Handles inbound materials and outbound product dispatch",
+        "nodeType": "department",
+        "properties": { "headCount": 25, "wmsSystem": "SAP EWM" }
+      }
+    },
+    {
+      "id": "node-worker-1",
+      "type": "manufacturing",
+      "position": { "x": 320, "y": 40 },
+      "data": {
+        "label": "Rajesh Kumar",
+        "subtype": "Operator",
+        "description": "Line operator on welding station, 8 years exp.",
+        "nodeType": "worker",
+        "properties": { "employeeId": "EMP-1021", "shift": "Morning", "certifications": "AWS D1.1" }
+      }
+    },
+    {
+      "id": "node-worker-2",
+      "type": "manufacturing",
+      "position": { "x": 320, "y": 180 },
+      "data": {
+        "label": "Priya Singh",
+        "subtype": "Quality Inspector",
+        "description": "Certified QA inspector, Six Sigma Green Belt",
+        "nodeType": "worker",
+        "properties": { "employeeId": "EMP-2045", "shift": "Afternoon", "certifications": "Six Sigma GB" }
+      }
+    },
+    {
+      "id": "node-worker-3",
+      "type": "manufacturing",
+      "position": { "x": 320, "y": 320 },
+      "data": {
+        "label": "Arun Mehta",
+        "subtype": "Technician",
+        "description": "CNC machining technician, handles 3-axis and 5-axis mills",
+        "nodeType": "worker",
+        "properties": { "employeeId": "EMP-3077", "shift": "Morning", "certifications": "CNC Level 3" }
+      }
+    },
+    {
+      "id": "node-worker-4",
+      "type": "manufacturing",
+      "position": { "x": 320, "y": 460 },
+      "data": {
+        "label": "Sunita Rao",
+        "subtype": "Engineer",
+        "description": "Process engineer overseeing assembly line optimization",
+        "nodeType": "worker",
+        "properties": { "employeeId": "EMP-4012", "shift": "General", "certifications": "BE Mechanical" }
+      }
+    },
+    {
+      "id": "node-worker-5",
+      "type": "manufacturing",
+      "position": { "x": 320, "y": 580 },
+      "data": {
+        "label": "Karan Verma",
+        "subtype": "Supervisor",
+        "description": "Shift supervisor overseeing 3 production cells",
+        "nodeType": "worker",
+        "properties": { "employeeId": "EMP-5003", "shift": "Rotating", "certifications": "PMP" }
+      }
+    },
+    {
+      "id": "node-mat-1",
+      "type": "manufacturing",
+      "position": { "x": 580, "y": 40 },
+      "data": {
+        "label": "Steel Sheet IS 2062",
+        "subtype": "Steel",
+        "description": "Hot rolled structural steel, grade E250",
+        "nodeType": "material",
+        "properties": { "unitCost": 75.5, "unit": "kg", "stockQty": 8400, "supplier": "SAIL" }
+      }
+    },
+    {
+      "id": "node-mat-2",
+      "type": "manufacturing",
+      "position": { "x": 580, "y": 170 },
+      "data": {
+        "label": "Aluminium Alloy 6061",
+        "subtype": "Aluminium",
+        "description": "Lightweight alloy for bracket and housing fabrication",
+        "nodeType": "material",
+        "properties": { "unitCost": 210, "unit": "kg", "stockQty": 3200, "supplier": "Hindalco" }
+      }
+    },
+    {
+      "id": "node-mat-3",
+      "type": "manufacturing",
+      "position": { "x": 580, "y": 300 },
+      "data": {
+        "label": "ABS Plastic Resin",
+        "subtype": "Plastic",
+        "description": "High impact ABS for injection moulding of enclosures",
+        "nodeType": "material",
+        "properties": { "unitCost": 95, "unit": "kg", "stockQty": 1500, "supplier": "Reliance Industries" }
+      }
+    },
+    {
+      "id": "node-mat-4",
+      "type": "manufacturing",
+      "position": { "x": 580, "y": 430 },
+      "data": {
+        "label": "Neoprene Rubber Sheet",
+        "subtype": "Rubber",
+        "description": "Used for gaskets and vibration damping pads",
+        "nodeType": "material",
+        "properties": { "unitCost": 180, "unit": "kg", "stockQty": 600, "supplier": "Elasto Proxy" }
+      }
+    },
+    {
+      "id": "node-mat-5",
+      "type": "manufacturing",
+      "position": { "x": 580, "y": 560 },
+      "data": {
+        "label": "Bearing Sub-Assembly",
+        "subtype": "Sub-Assembly",
+        "description": "Pre-assembled SKF bearings for motor mounts",
+        "nodeType": "material",
+        "properties": { "unitCost": 450, "unit": "pcs", "stockQty": 800, "supplier": "SKF India" }
+      }
+    },
+    {
+      "id": "node-proc-1",
+      "type": "manufacturing",
+      "position": { "x": 860, "y": 40 },
+      "data": {
+        "label": "MIG Welding Station W1",
+        "subtype": "Welding",
+        "description": "MIG welding of steel chassis frames, 200 units/shift",
+        "nodeType": "process",
+        "properties": { "cycleTime_min": 4.5, "defectRate_pct": 1.2, "uptime_pct": 92, "temperature_C": 1500 }
+      }
+    },
+    {
+      "id": "node-proc-2",
+      "type": "manufacturing",
+      "position": { "x": 860, "y": 200 },
+      "data": {
+        "label": "CNC Machining Line A",
+        "subtype": "CNC Machining",
+        "description": "5-axis CNC milling of aluminium housings",
+        "nodeType": "process",
+        "properties": { "cycleTime_min": 12, "defectRate_pct": 0.8, "uptime_pct": 88, "spindleSpeed_rpm": 6000 }
+      }
+    },
+    {
+      "id": "node-proc-3",
+      "type": "manufacturing",
+      "position": { "x": 860, "y": 360 },
+      "data": {
+        "label": "Final Assembly Cell 3",
+        "subtype": "Assembly",
+        "description": "Integration of machined parts, sub-assemblies and enclosures",
+        "nodeType": "process",
+        "properties": { "cycleTime_min": 25, "defectRate_pct": 2.1, "uptime_pct": 95, "workers": 6 }
+      }
+    },
+    {
+      "id": "node-proc-4",
+      "type": "manufacturing",
+      "position": { "x": 860, "y": 520 },
+      "data": {
+        "label": "Quality Inspection QC1",
+        "subtype": "Quality Check",
+        "description": "100% visual + dimensional inspection at end of line",
+        "nodeType": "process",
+        "properties": { "cycleTime_min": 8, "rejectionRate_pct": 3.5, "uptime_pct": 98, "method": "CMM + Visual" }
+      }
+    },
+    {
+      "id": "node-proc-5",
+      "type": "manufacturing",
+      "position": { "x": 860, "y": 680 },
+      "data": {
+        "label": "Electrostatic Painting",
+        "subtype": "Painting",
+        "description": "Powder coat painting of steel and aluminium parts",
+        "nodeType": "process",
+        "properties": { "cycleTime_min": 18, "defectRate_pct": 1.5, "uptime_pct": 90, "coatThickness_um": 80 }
+      }
+    },
+    {
+      "id": "node-proc-6",
+      "type": "manufacturing",
+      "position": { "x": 860, "y": 840 },
+      "data": {
+        "label": "Packaging and Dispatch",
+        "subtype": "Packaging",
+        "description": "Final packaging, labelling and dispatch to warehouse",
+        "nodeType": "process",
+        "properties": { "cycleTime_min": 5, "unitsPerHour": 60, "uptime_pct": 99 }
+      }
+    },
+    {
+      "id": "node-sensor-1",
+      "type": "manufacturing",
+      "position": { "x": 1140, "y": 40 },
+      "data": {
+        "label": "Thermocouple TS-W1",
+        "subtype": "Temperature",
+        "description": "Monitors weld zone temperature at Station W1",
+        "nodeType": "sensor",
+        "properties": { "sensorId": "SEN-T001", "unit": "degC", "range": "0-2000", "currentValue": 1485, "status": "OK" }
+      }
+    },
+    {
+      "id": "node-sensor-2",
+      "type": "manufacturing",
+      "position": { "x": 1140, "y": 180 },
+      "data": {
+        "label": "Vibration Sensor VS-CNC1",
+        "subtype": "Vibration",
+        "description": "Monitors spindle vibration on CNC Line A",
+        "nodeType": "sensor",
+        "properties": { "sensorId": "SEN-V001", "unit": "mm/s", "range": "0-50", "currentValue": 3.2, "status": "OK" }
+      }
+    },
+    {
+      "id": "node-sensor-3",
+      "type": "manufacturing",
+      "position": { "x": 1140, "y": 320 },
+      "data": {
+        "label": "Pressure Sensor PS-HYD1",
+        "subtype": "Pressure",
+        "description": "Hydraulic press pressure monitoring, Cell 3",
+        "nodeType": "sensor",
+        "properties": { "sensorId": "SEN-P001", "unit": "bar", "range": "0-250", "currentValue": 182, "status": "WARNING" }
+      }
+    },
+    {
+      "id": "node-sensor-4",
+      "type": "manufacturing",
+      "position": { "x": 1140, "y": 460 },
+      "data": {
+        "label": "Humidity Sensor HM-PKG1",
+        "subtype": "Humidity",
+        "description": "Ambient humidity monitoring in packaging area",
+        "nodeType": "sensor",
+        "properties": { "sensorId": "SEN-H001", "unit": "%RH", "range": "0-100", "currentValue": 58, "status": "OK" }
+      }
+    },
+    {
+      "id": "node-sensor-5",
+      "type": "manufacturing",
+      "position": { "x": 1140, "y": 600 },
+      "data": {
+        "label": "Power Meter PM-PAINT1",
+        "subtype": "Power",
+        "description": "Energy consumption monitor for paint oven",
+        "nodeType": "sensor",
+        "properties": { "sensorId": "SEN-E001", "unit": "kW", "range": "0-500", "currentValue": 312, "status": "OK" }
+      }
+    },
+    {
+      "id": "node-sensor-6",
+      "type": "manufacturing",
+      "position": { "x": 1140, "y": 740 },
+      "data": {
+        "label": "Flow Sensor FS-COOL1",
+        "subtype": "Flow",
+        "description": "Coolant flow rate in CNC machining cooling circuit",
+        "nodeType": "sensor",
+        "properties": { "sensorId": "SEN-F001", "unit": "L/min", "range": "0-100", "currentValue": 45, "status": "OK" }
+      }
+    },
+    {
+      "id": "node-prod-1",
+      "type": "manufacturing",
+      "position": { "x": 1400, "y": 100 },
+      "data": {
+        "label": "Steel Chassis Frame",
+        "subtype": "Sub-Assembly",
+        "description": "Welded steel chassis, ready for machining and painting",
+        "nodeType": "product",
+        "properties": { "sku": "PRD-CH-001", "unitWeight_kg": 18.5, "dailyOutput": 200, "qcPassRate_pct": 98.8 }
+      }
+    },
+    {
+      "id": "node-prod-2",
+      "type": "manufacturing",
+      "position": { "x": 1400, "y": 280 },
+      "data": {
+        "label": "Aluminium Housing",
+        "subtype": "Component",
+        "description": "CNC machined aluminium enclosure housing for electronics",
+        "nodeType": "product",
+        "properties": { "sku": "PRD-AH-002", "unitWeight_kg": 2.1, "dailyOutput": 85, "qcPassRate_pct": 99.2 }
+      }
+    },
+    {
+      "id": "node-prod-3",
+      "type": "manufacturing",
+      "position": { "x": 1400, "y": 460 },
+      "data": {
+        "label": "Assembled Drive Unit",
+        "subtype": "Final Product",
+        "description": "Fully assembled industrial drive unit - tested and certified",
+        "nodeType": "product",
+        "properties": { "sku": "PRD-DU-010", "unitWeight_kg": 28, "dailyOutput": 45, "qcPassRate_pct": 96.5, "warranty_months": 24 }
+      }
+    },
+    {
+      "id": "node-prod-4",
+      "type": "manufacturing",
+      "position": { "x": 1400, "y": 640 },
+      "data": {
+        "label": "Painted Batch Output",
+        "subtype": "Batch Output",
+        "description": "Mixed batch of powder-coated components, QC stamped",
+        "nodeType": "product",
+        "properties": { "sku": "PRD-PB-020", "batchSize": 500, "coatColour": "RAL 7035", "dailyBatches": 3 }
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e-dept1-worker1", "source": "node-dept-1", "target": "node-worker-1", "type": "smoothstep", "label": "managed by", "data": { "relationship": "managed_by" }, "relationship": "managed_by", "animated": false },
+    { "id": "e-dept1-worker3", "source": "node-dept-1", "target": "node-worker-3", "type": "smoothstep", "label": "managed by", "data": { "relationship": "managed_by" }, "relationship": "managed_by", "animated": false },
+    { "id": "e-dept1-worker5", "source": "node-dept-1", "target": "node-worker-5", "type": "smoothstep", "label": "managed by", "data": { "relationship": "managed_by" }, "relationship": "managed_by", "animated": false },
+    { "id": "e-dept2-worker2", "source": "node-dept-2", "target": "node-worker-2", "type": "smoothstep", "label": "managed by", "data": { "relationship": "managed_by" }, "relationship": "managed_by", "animated": false },
+    { "id": "e-dept1-worker4", "source": "node-dept-1", "target": "node-worker-4", "type": "smoothstep", "label": "managed by", "data": { "relationship": "managed_by" }, "relationship": "managed_by", "animated": false },
+    { "id": "e-proc1-dept1", "source": "node-proc-1", "target": "node-dept-1", "type": "smoothstep", "label": "belongs to", "data": { "relationship": "belongs_to" }, "relationship": "belongs_to", "animated": false },
+    { "id": "e-proc2-dept1", "source": "node-proc-2", "target": "node-dept-1", "type": "smoothstep", "label": "belongs to", "data": { "relationship": "belongs_to" }, "relationship": "belongs_to", "animated": false },
+    { "id": "e-proc3-dept1", "source": "node-proc-3", "target": "node-dept-1", "type": "smoothstep", "label": "belongs to", "data": { "relationship": "belongs_to" }, "relationship": "belongs_to", "animated": false },
+    { "id": "e-proc4-dept2", "source": "node-proc-4", "target": "node-dept-2", "type": "smoothstep", "label": "belongs to", "data": { "relationship": "belongs_to" }, "relationship": "belongs_to", "animated": false },
+    { "id": "e-proc5-dept1", "source": "node-proc-5", "target": "node-dept-1", "type": "smoothstep", "label": "belongs to", "data": { "relationship": "belongs_to" }, "relationship": "belongs_to", "animated": false },
+    { "id": "e-proc6-dept4", "source": "node-proc-6", "target": "node-dept-4", "type": "smoothstep", "label": "belongs to", "data": { "relationship": "belongs_to" }, "relationship": "belongs_to", "animated": false },
+    { "id": "e-mat1-proc1", "source": "node-mat-1", "target": "node-proc-1", "type": "smoothstep", "label": "feeds into", "data": { "relationship": "feeds_into" }, "relationship": "feeds_into", "animated": false },
+    { "id": "e-mat2-proc2", "source": "node-mat-2", "target": "node-proc-2", "type": "smoothstep", "label": "feeds into", "data": { "relationship": "feeds_into" }, "relationship": "feeds_into", "animated": false },
+    { "id": "e-mat3-proc3", "source": "node-mat-3", "target": "node-proc-3", "type": "smoothstep", "label": "feeds into", "data": { "relationship": "feeds_into" }, "relationship": "feeds_into", "animated": false },
+    { "id": "e-mat4-proc5", "source": "node-mat-4", "target": "node-proc-5", "type": "smoothstep", "label": "feeds into", "data": { "relationship": "feeds_into" }, "relationship": "feeds_into", "animated": false },
+    { "id": "e-mat5-proc3", "source": "node-mat-5", "target": "node-proc-3", "type": "smoothstep", "label": "feeds into", "data": { "relationship": "feeds_into" }, "relationship": "feeds_into", "animated": false },
+    { "id": "e-proc1-req-mat1", "source": "node-proc-1", "target": "node-mat-1", "type": "smoothstep", "label": "requires", "data": { "relationship": "requires" }, "relationship": "requires", "animated": false },
+    { "id": "e-proc2-req-mat2", "source": "node-proc-2", "target": "node-mat-2", "type": "smoothstep", "label": "requires", "data": { "relationship": "requires" }, "relationship": "requires", "animated": false },
+    { "id": "e-proc3-req-mat5", "source": "node-proc-3", "target": "node-mat-5", "type": "smoothstep", "label": "requires", "data": { "relationship": "requires" }, "relationship": "requires", "animated": false },
+    { "id": "e-proc1-prod1", "source": "node-proc-1", "target": "node-prod-1", "type": "smoothstep", "label": "produces", "data": { "relationship": "produces" }, "relationship": "produces", "animated": false },
+    { "id": "e-proc2-prod2", "source": "node-proc-2", "target": "node-prod-2", "type": "smoothstep", "label": "produces", "data": { "relationship": "produces" }, "relationship": "produces", "animated": false },
+    { "id": "e-proc3-prod3", "source": "node-proc-3", "target": "node-prod-3", "type": "smoothstep", "label": "produces", "data": { "relationship": "produces" }, "relationship": "produces", "animated": false },
+    { "id": "e-proc5-prod4", "source": "node-proc-5", "target": "node-prod-4", "type": "smoothstep", "label": "produces", "data": { "relationship": "produces" }, "relationship": "produces", "animated": false },
+    { "id": "e-prod1-partof-prod3", "source": "node-prod-1", "target": "node-prod-3", "type": "smoothstep", "label": "part of", "data": { "relationship": "part_of" }, "relationship": "part_of", "animated": false },
+    { "id": "e-prod2-partof-prod3", "source": "node-prod-2", "target": "node-prod-3", "type": "smoothstep", "label": "part of", "data": { "relationship": "part_of" }, "relationship": "part_of", "animated": false },
+    { "id": "e-proc1-opby-worker1", "source": "node-proc-1", "target": "node-worker-1", "type": "smoothstep", "label": "operated by", "data": { "relationship": "operated_by" }, "relationship": "operated_by", "animated": false },
+    { "id": "e-proc2-opby-worker3", "source": "node-proc-2", "target": "node-worker-3", "type": "smoothstep", "label": "operated by", "data": { "relationship": "operated_by" }, "relationship": "operated_by", "animated": false },
+    { "id": "e-proc3-opby-worker4", "source": "node-proc-3", "target": "node-worker-4", "type": "smoothstep", "label": "operated by", "data": { "relationship": "operated_by" }, "relationship": "operated_by", "animated": false },
+    { "id": "e-proc4-opby-worker2", "source": "node-proc-4", "target": "node-worker-2", "type": "smoothstep", "label": "operated by", "data": { "relationship": "operated_by" }, "relationship": "operated_by", "animated": false },
+    { "id": "e-worker2-inspects-prod3", "source": "node-worker-2", "target": "node-prod-3", "type": "smoothstep", "label": "inspects", "data": { "relationship": "inspects" }, "relationship": "inspects", "animated": false },
+    { "id": "e-worker2-inspects-prod4", "source": "node-worker-2", "target": "node-prod-4", "type": "smoothstep", "label": "inspects", "data": { "relationship": "inspects" }, "relationship": "inspects", "animated": false },
+    { "id": "e-sensor1-mon-proc1", "source": "node-sensor-1", "target": "node-proc-1", "type": "smoothstep", "label": "monitors", "data": { "relationship": "monitors" }, "relationship": "monitors", "animated": true },
+    { "id": "e-sensor2-mon-proc2", "source": "node-sensor-2", "target": "node-proc-2", "type": "smoothstep", "label": "monitors", "data": { "relationship": "monitors" }, "relationship": "monitors", "animated": true },
+    { "id": "e-sensor3-mon-proc3", "source": "node-sensor-3", "target": "node-proc-3", "type": "smoothstep", "label": "monitors", "data": { "relationship": "monitors" }, "relationship": "monitors", "animated": true },
+    { "id": "e-sensor4-mon-proc6", "source": "node-sensor-4", "target": "node-proc-6", "type": "smoothstep", "label": "monitors", "data": { "relationship": "monitors" }, "relationship": "monitors", "animated": true },
+    { "id": "e-sensor5-mon-proc5", "source": "node-sensor-5", "target": "node-proc-5", "type": "smoothstep", "label": "monitors", "data": { "relationship": "monitors" }, "relationship": "monitors", "animated": true },
+    { "id": "e-sensor6-mon-proc2", "source": "node-sensor-6", "target": "node-proc-2", "type": "smoothstep", "label": "monitors", "data": { "relationship": "monitors" }, "relationship": "monitors", "animated": true },
+    { "id": "e-proc1-proc5", "source": "node-proc-1", "target": "node-proc-5", "type": "smoothstep", "label": "feeds into", "data": { "relationship": "feeds_into" }, "relationship": "feeds_into", "animated": false },
+    { "id": "e-proc3-proc4", "source": "node-proc-3", "target": "node-proc-4", "type": "smoothstep", "label": "feeds into", "data": { "relationship": "feeds_into" }, "relationship": "feeds_into", "animated": false },
+    { "id": "e-proc4-proc6", "source": "node-proc-4", "target": "node-proc-6", "type": "smoothstep", "label": "feeds into", "data": { "relationship": "feeds_into" }, "relationship": "feeds_into", "animated": false }
+  ]
+}

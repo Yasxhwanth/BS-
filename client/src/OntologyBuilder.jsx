@@ -101,7 +101,9 @@ export default function OntologyBuilder() {
   const [saving, setSaving]   = useState(false);
   const [saved, setSaved]     = useState(false);
   const [addForm, setAddForm] = useState({ type: 'process', subtype: '', label: '', description: '' });
+  const [importError, setImportError] = useState('');
   const flowRef = useRef(null);
+  const importRef = useRef(null);
   let nodeCounter = useRef(nodes.length + 1);
 
   // Load saved ontology on mount
@@ -215,6 +217,35 @@ export default function OntologyBuilder() {
     setSelectedNode(null);
   };
 
+  // Import JSON file (mock_ontology_data.json or any exported ontology)
+  const handleImport = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportError('');
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        const importedNodes = parsed.nodes || [];
+        const importedEdges = parsed.edges || [];
+        if (!importedNodes.length) {
+          setImportError('No nodes found in file.');
+          return;
+        }
+        setNodes(importedNodes);
+        setEdges(importedEdges);
+        nodeCounter.current = importedNodes.length + 1;
+        setSelectedNode(null);
+        setImportError('');
+      } catch {
+        setImportError('Invalid JSON file.');
+      }
+    };
+    reader.readAsText(file);
+    // Reset so same file can be re-imported
+    e.target.value = '';
+  };
+
   return (
     <div className="ontology-shell" style={{ display: 'flex', flexDirection: 'column' }}>
 
@@ -231,12 +262,31 @@ export default function OntologyBuilder() {
             <CheckmarkFilled size={12} /> {ontologyMeta.nodeCount} nodes · {ontologyMeta.edgeCount} edges · {ontologyMeta.axiomCount} axioms
           </span>
         )}
+        {/* Hidden file input for JSON import */}
+        <input
+          ref={importRef}
+          type="file"
+          accept=".json,application/json"
+          style={{ display: 'none' }}
+          onChange={handleImport}
+        />
+        <button
+          className="btn btn-secondary btn-sm"
+          onClick={() => importRef.current?.click()}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          title="Import mock_ontology_data.json or any exported ontology file"
+        >
+          ⬆ Import JSON
+        </button>
         <button className="btn btn-secondary btn-sm" onClick={handleExport} disabled={nodes.length === 0} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <Download size={14} /> Export JSON-LD
         </button>
         <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving || nodes.length === 0} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           {saving ? '…' : saved ? <><CheckmarkFilled size={14} /> Saved!</> : <><Save size={14} /> Save & Generate</>}
         </button>
+        {importError && (
+          <span style={{ color: '#ff8389', fontSize: 12, marginLeft: 8 }}>{importError}</span>
+        )}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr 280px', flex: 1, overflow: 'hidden' }}>
