@@ -9,6 +9,13 @@ import {
   CheckmarkFilled,
   WarningFilled,
   Activity,
+  MeterAlt,
+  Flash,
+  Time,
+  Tools,
+  Network_4,
+  ArrowUpRight,
+  ArrowDownRight,
 } from '@carbon/icons-react';
 
 const socket = io('http://localhost:5000');
@@ -194,25 +201,11 @@ export default function Dashboard({ user }) {
         )}
 
         {/* Data Source Info Banner */}
-        <div
-          style={{
-            background: 'var(--bg-secondary)',
-            border: '1px solid var(--border-subtle)',
-            padding: '10px 16px',
-            marginBottom: 20,
-            borderRadius: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 12,
-            fontSize: 12,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="dataset-banner">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <Document size={16} style={{ color: 'var(--teal-40)' }} />
             <span style={{ color: 'var(--text-secondary)' }}>Active Dataset:</span>
-            <strong style={{ color: 'var(--text-primary)', fontFamily: 'monospace' }}>
+            <strong style={{ color: 'var(--text-primary)', fontFamily: 'monospace', letterSpacing: '0.3px' }}>
               {datasetInfo.fileName || 'sample_manufacturing_data.xlsx'}
             </strong>
             <span className={`badge ${datasetInfo.isCustom ? 'active' : 'resolved'}`}>
@@ -220,34 +213,126 @@ export default function Dashboard({ user }) {
             </span>
           </div>
 
-          <div style={{ color: 'var(--text-helper)' }}>
-            Imported: {datasetInfo.importedAt ? new Date(datasetInfo.importedAt).toLocaleTimeString() : 'Initial'} · 5 sheets configured
+          <div style={{ color: 'var(--text-helper)', fontSize: 11, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>Imported: {datasetInfo.importedAt ? new Date(datasetInfo.importedAt).toLocaleTimeString() : 'Initial'}</span>
+            <span>·</span>
+            <span>5 sheets configured</span>
           </div>
         </div>
 
-        {/* KPI Tiles */}
+        {/* KPI Tiles — Balanced 4x2 Matrix */}
         <div className="kpi-grid">
           {[
-            { key: 'oee',                  label: 'OEE',                   value: kpis.oee,                  unit: '%',   color: 'blue'   },
-            { key: 'productionEfficiency', label: 'Production Efficiency', value: kpis.productionEfficiency, unit: '%',   color: 'teal'   },
-            { key: 'qualityRate',          label: 'Quality Rate',          value: kpis.qualityRate,          unit: '%',   color: 'green'  },
-            { key: 'mtbf',                 label: 'MTBF',                  value: kpis.mtbf,                 unit: 'hrs', color: 'yellow' },
-            { key: 'mttr',                 label: 'MTTR',                  value: kpis.mttr,                 unit: 'hrs', color: 'blue'   },
-            { key: 'activeAlerts',         label: 'Active Alerts',         value: kpis.activeAlerts ?? 0,    unit: '',    color: kpis.criticalAlerts > 0 ? 'red' : 'teal' },
-            { key: 'ontologyNodes',        label: 'Ontology Nodes',        value: kpis.ontologyNodes ?? 0,   unit: '',    color: 'purple' },
-            { key: 'energyConsumption',    label: 'Energy (kWh)',          value: kpis.energyConsumption,    unit: '',    color: 'yellow' },
+            {
+              key: 'oee',
+              shortLabel: 'OEE',
+              value: kpis.oee,
+              unit: '%',
+              color: 'blue',
+              icon: MeterAlt,
+            },
+            {
+              key: 'productionEfficiency',
+              shortLabel: 'Efficiency',
+              value: kpis.productionEfficiency,
+              unit: '%',
+              color: 'teal',
+              icon: Activity,
+            },
+            {
+              key: 'qualityRate',
+              shortLabel: 'Quality Rate',
+              value: kpis.qualityRate,
+              unit: '%',
+              color: 'green',
+              icon: CheckmarkFilled,
+            },
+            {
+              key: 'energyConsumption',
+              shortLabel: 'Power Load',
+              value: kpis.energyConsumption,
+              unit: 'kW',
+              color: 'yellow',
+              icon: Flash,
+            },
+            {
+              key: 'mtbf',
+              shortLabel: 'MTBF',
+              value: kpis.mtbf,
+              unit: 'hrs',
+              color: 'purple',
+              icon: Time,
+            },
+            {
+              key: 'mttr',
+              shortLabel: 'MTTR',
+              value: kpis.mttr,
+              unit: 'hrs',
+              color: 'blue',
+              icon: Tools,
+            },
+            {
+              key: 'activeAlerts',
+              shortLabel: 'Active Alerts',
+              value: kpis.activeAlerts ?? 0,
+              unit: '',
+              color: kpis.criticalAlerts > 0 ? 'red' : 'teal',
+              icon: WarningFilled,
+            },
+            {
+              key: 'ontologyNodes',
+              shortLabel: 'Twin Nodes',
+              value: kpis.ontologyNodes ?? 0,
+              unit: '',
+              color: 'teal',
+              icon: Network_4,
+            },
           ].map(k => {
-            const trendText = trends[k.key] || (k.key === 'activeAlerts' ? `${kpis.criticalAlerts || 0} critical` : '');
+            const rawTrend = trends[k.key];
+            const isAlert = k.key === 'activeAlerts';
+            const isTwin = k.key === 'ontologyNodes';
+            const trendText = isAlert
+              ? `${kpis.criticalAlerts || 0} critical`
+              : isTwin
+              ? `${kpis.ontologyEdges || 34} links`
+              : rawTrend || '';
+
+            const isUp = trendText.includes('↑') || trendText.includes('+');
+            const isDown = trendText.includes('↓') || trendText.includes('-');
+
             return (
-              <div key={k.label} className={`kpi-tile ${k.color}`}>
-                <div className="kpi-label">{k.label}</div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+              <div key={k.key} className={`kpi-tile ${k.color}`}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span className="kpi-label">{k.shortLabel}</span>
+                  <div className={`kpi-icon-wrap ${k.color}`}>
+                    <k.icon size={15} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
                   <span className="kpi-value">{k.value ?? '—'}</span>
                   {k.unit && <span className="kpi-unit">{k.unit}</span>}
                 </div>
+
                 {trendText && (
-                  <div className={`kpi-trend ${trendText.includes('↑') || trendText.includes('+') ? 'up' : trendText.includes('↓') || trendText.includes('-') ? 'down' : ''}`}>
-                    {trendText}
+                  <div
+                    className={`kpi-trend ${
+                      isAlert
+                        ? kpis.criticalAlerts > 0
+                          ? 'down'
+                          : 'neutral'
+                        : isTwin
+                        ? 'neutral'
+                        : isUp
+                        ? 'up'
+                        : isDown
+                        ? 'down'
+                        : 'neutral'
+                    }`}
+                  >
+                    {isUp && <ArrowUpRight size={11} />}
+                    {isDown && <ArrowDownRight size={11} />}
+                    <span>{trendText}</span>
                   </div>
                 )}
               </div>
@@ -269,7 +354,7 @@ export default function Dashboard({ user }) {
                 <div className="legend-dot" style={{ background: 'var(--blue-60)' }} /> Output
               </div>
               <div className="chart-legend-item">
-                <div className="legend-dot" style={{ background: 'var(--support-error)', opacity: 0.7 }} /> Defects
+                <div className="legend-dot" style={{ background: 'var(--support-error)' }} /> Defects
               </div>
             </div>
             <div className="chart-container">
@@ -302,14 +387,18 @@ export default function Dashboard({ user }) {
               </div>
             </div>
             <div className="sensor-list">
-              {sensors.length > 0 ? sensors.map(s => (
-                <div key={s.id} className="sensor-item">
-                  <div className={`sensor-dot ${s.status || 'normal'}`} />
-                  <span className="sensor-name">{s.label || s.id}</span>
-                  <span className="sensor-value">{s.value}</span>
-                  <span className="sensor-unit">{s.unit}</span>
-                </div>
-              )) : (
+              {sensors.length > 0 ? sensors.map(s => {
+                const cleanUnit = (s.unit || '').trim();
+                const displayUnit = cleanUnit === 'C' ? '°C' : cleanUnit;
+                return (
+                  <div key={s.id} className="sensor-item">
+                    <div className={`sensor-dot ${s.status || 'normal'}`} />
+                    <span className="sensor-name">{s.label || s.id}</span>
+                    <span className="sensor-value">{s.value}</span>
+                    <span className="sensor-unit">{displayUnit}</span>
+                  </div>
+                );
+              }) : (
                 <div className="text-secondary text-sm">No sensors in active dataset…</div>
               )}
             </div>
@@ -326,34 +415,45 @@ export default function Dashboard({ user }) {
                 No process breakdown found in dataset. Upload an Excel file with a Process sheet.
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
                 {processBreakdown.map(p => (
-                  <div key={p.name} className="progress-bar-wrap" style={{ background: 'var(--bg-primary)', padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 2 }}>
-                    <div className="progress-bar-label" style={{ marginBottom: 6 }}>
-                      <span style={{ fontWeight: 500 }}>{p.name}</span>
-                      <span className="font-mono">{p.efficiency}%</span>
-                    </div>
-                    <div className="progress-bar-track" style={{ marginBottom: 8 }}>
-                      <div
-                        className="progress-bar-fill"
-                        style={{
-                          width: `${Math.min(100, p.efficiency)}%`,
-                          background: p.efficiency >= 88 ? 'var(--support-success)' : p.efficiency >= 75 ? 'var(--blue-60)' : 'var(--support-warning)',
-                        }}
-                      />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--text-helper)' }}>
-                      <span>Cycle: {p.cycleTimeSec || 30}s</span>
+                  <div key={p.name} className="process-card">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                      <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>{p.name}</span>
                       <span className={`badge ${p.status === 'Optimal' ? 'resolved' : p.status === 'Warning' ? 'active' : 'acknowledged'}`}>
                         {p.status || 'Operating'}
                       </span>
                     </div>
-                    {p.alerts > 0 && (
-                      <div className="text-xs text-warning mt-8" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <WarningFilled size={12} />
-                        <span>{p.alerts} active alert(s)</span>
-                      </div>
-                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, fontSize: 12 }}>
+                      <span style={{ color: 'var(--text-helper)' }}>Efficiency</span>
+                      <span style={{ fontWeight: 600, fontFamily: 'monospace', color: p.efficiency >= 88 ? 'var(--support-success)' : p.efficiency >= 75 ? 'var(--blue-40)' : 'var(--support-warning)' }}>
+                        {p.efficiency}%
+                      </span>
+                    </div>
+                    <div className="progress-bar-track" style={{ marginBottom: 10, height: 6, borderRadius: 3 }}>
+                      <div
+                        className="progress-bar-fill"
+                        style={{
+                          width: `${Math.min(100, p.efficiency)}%`,
+                          borderRadius: 3,
+                          background: p.efficiency >= 88
+                            ? 'linear-gradient(90deg, #24a148, #42be65)'
+                            : p.efficiency >= 75
+                            ? 'linear-gradient(90deg, #0f62fe, #4589ff)'
+                            : 'linear-gradient(90deg, #d2a106, #f1c21b)',
+                        }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--text-helper)' }}>
+                      <span>Cycle Time: <strong style={{ color: 'var(--text-secondary)' }}>{p.cycleTimeSec || 30}s</strong></span>
+                      {p.alerts > 0 ? (
+                        <span style={{ color: 'var(--support-warning)', display: 'inline-flex', alignItems: 'center', gap: 3, fontWeight: 500 }}>
+                          <WarningFilled size={12} /> {p.alerts} alert{p.alerts > 1 ? 's' : ''}
+                        </span>
+                      ) : (
+                        <span style={{ color: 'var(--support-success)' }}>Nominal</span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
