@@ -10,6 +10,7 @@ const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const morgan = require('morgan');
+const { isGeminiConfigured, setGeminiKey, askGemini } = require('./geminiService');
 
 const app = express();
 const server = http.createServer(app);
@@ -95,6 +96,7 @@ const ChatMessageSchema = new mongoose.Schema({
   role: { type: String, enum: ['user', 'assistant'], required: true },
   content: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  meta: { type: mongoose.Schema.Types.Mixed, default: {} },
 }, { timestamps: true });
 const ChatMessage = mongoose.model('ChatMessage', ChatMessageSchema);
 
@@ -147,27 +149,83 @@ const generateToken = (id) =>
 // AI ENGINE (Simulated)
 // ─────────────────────────────────────────
 const AIEngine = {
-  // Generate AI response based on ontology context
-  chat: async (message, ontologyContext) => {
+  // Generate AI response based on ontology context and Gemini
+  chat: async (message, context = {}) => {
+    const ontology = context?.nodes ? context : (context.ontology || null);
+    const alerts = context.alerts || [];
+    const plantData = context.plantData || null;
+    const history = context.history || [];
+    const user = context.user || null;
+
+    // 1. Attempt Gemini if configured
+    if (isGeminiConfigured()) {
+      try {
+        const geminiRes = await askGemini({
+          message,
+          history,
+          ontology,
+          alerts,
+          plantData,
+          user,
+        });
+        if (geminiRes && geminiRes.content) {
+          return geminiRes;
+        }
+      } catch (err) {
+        console.error('[Gemini AI] Call failed, using fallback:', err.message);
+      }
+    }
+
+    // 2. Fallback: Ontology-aware simulated engine
     const msg = message.toLowerCase();
-    const nodes = ontologyContext?.nodes || [];
+    const nodes = ontology?.nodes || [];
     const processNodes = nodes.filter(n => n.type === 'process').map(n => n.data?.label).join(', ');
     const sensorNodes = nodes.filter(n => n.type === 'sensor').map(n => n.data?.label).join(', ');
     const workerNodes = nodes.filter(n => n.type === 'worker').map(n => n.data?.label).join(', ');
 
-    if (msg.includes('maintenance') || msg.includes('repair'))
-      return { content: `Based on your ontology, I've detected that processes (${processNodes || 'N/A'}) may require scheduled maintenance. Recommend checking vibration sensors for anomalies. Predicted next failure: 72 hours.`, intent: 'maintenance', confidence: 87 };
-    if (msg.includes('sensor') || msg.includes('temperature') || msg.includes('vibration'))
-      return { content: `Current sensors in your ontology: ${sensorNodes || 'None configured'}. All readings are within acceptable thresholds. Last anomaly detected 4 hours ago on Vibration Sensor S-02.`, intent: 'sensor_query', confidence: 92 };
-    if (msg.includes('worker') || msg.includes('operator') || msg.includes('technician'))
-      return { content: `Worker roles in your ontology: ${workerNodes || 'None configured'}. Current shift utilization is at 78%. Recommend reassigning 2 operators from Assembly to Quality Check.`, intent: 'workforce', confidence: 79 };
-    if (msg.includes('quality') || msg.includes('defect'))
-      return { content: `Quality analysis from your ontology shows 94.2% pass rate this week. 3 defects traced back to Welding Process → Material Feed. AI recommends adjusting weld temperature by -5°C.`, intent: 'quality', confidence: 91 };
-    if (msg.includes('production') || msg.includes('output') || msg.includes('efficiency'))
-      return { content: `Production efficiency is at 87.3% based on current ontology data. Assembly Process is the bottleneck with 12% idle time. AI predicts 6% improvement if material supply is optimized.`, intent: 'production', confidence: 84 };
-    if (msg.includes('alert') || msg.includes('warning'))
-      return { content: `There are currently 3 active alerts in the system: 1 critical (Pressure Sensor P-01 threshold exceeded), 1 high (Assembly Process downtime), 1 medium (Material stock at 15%). Immediate action required on critical alert.`, intent: 'alerts', confidence: 96 };
-    return { content: `I'm your Manufacturing AI Assistant. Your current ontology has ${nodes.length} entities. I can help with predictive maintenance, quality analysis, sensor monitoring, workforce optimization, and production efficiency. What would you like to explore?`, intent: 'general', confidence: 75 };
+    let fallbackReply = '';
+    let intent = 'general';
+    let confidence = 75;
+
+    if (msg.includes('maintenance') || msg.includes('repair')) {
+      fallbackReply = `Based on your ontology, I've detected that processes (${processNodes || 'N/A'}) may require scheduled maintenance. Recommend checking vibration sensors for anomalies. Predicted next failure: 72 hours.`;
+      intent = 'maintenance';
+      confidence = 87;
+    } else if (msg.includes('sensor') || msg.includes('temperature') || msg.includes('vibration')) {
+      fallbackReply = `Current sensors in your ontology: ${sensorNodes || 'None configured'}. All readings are within acceptable thresholds. Last anomaly detected 4 hours ago on Vibration Sensor S-02.`;
+      intent = 'sensor_query';
+      confidence = 92;
+    } else if (msg.includes('worker') || msg.includes('operator') || msg.includes('technician')) {
+      fallbackReply = `Worker roles in your ontology: ${workerNodes || 'None configured'}. Current shift utilization is at 78%. Recommend reassigning 2 operators from Assembly to Quality Check.`;
+      intent = 'workforce';
+      confidence = 79;
+    } else if (msg.includes('quality') || msg.includes('defect')) {
+      fallbackReply = `Quality analysis from your ontology shows 94.2% pass rate this week. 3 defects traced back to Welding Process → Material Feed. AI recommends adjusting weld temperature by -5°C.`;
+      intent = 'quality';
+      confidence = 91;
+    } else if (msg.includes('production') || msg.includes('output') || msg.includes('efficiency')) {
+      fallbackReply = `Production efficiency is at 87.3% based on current ontology data. Assembly Process is the bottleneck with 12% idle time. AI predicts 6% improvement if material supply is optimized.`;
+      intent = 'production';
+      confidence = 84;
+    } else if (msg.includes('alert') || msg.includes('warning')) {
+      fallbackReply = `There are currently 3 active alerts in the system: 1 critical (Pressure Sensor P-01 threshold exceeded), 1 high (Assembly Process downtime), 1 medium (Material stock at 15%). Immediate action required on critical alert.`;
+      intent = 'alerts';
+      confidence = 96;
+    } else {
+      fallbackReply = `I'm your Manufacturing AI Assistant. Your current ontology has ${nodes.length} entities. I can help with predictive maintenance, quality analysis, sensor monitoring, workforce optimization, and production efficiency. What would you like to explore?`;
+    }
+
+    const hint = !isGeminiConfigured()
+      ? '\n\n*(💡 Tip: Add your `GEMINI_API_KEY` to .env or in the AI Key config above to activate live Google Gemini)*'
+      : '';
+
+    return {
+      content: fallbackReply + hint,
+      intent,
+      confidence,
+      model: 'simulated-engine',
+      source: 'simulation',
+    };
   },
 
   // Predictive maintenance score
@@ -662,22 +720,85 @@ app.get('/api/analytics/predict/:nodeId', protect, async (req, res) => {
 // ─────────────────────────────────────────
 // CHAT ROUTES
 // ─────────────────────────────────────────
+app.get('/api/chat/status', protect, async (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      provider: 'gemini',
+      configured: isGeminiConfigured(),
+      model: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
+    },
+  });
+});
+
+app.post('/api/chat/config', protect, async (req, res) => {
+  try {
+    const { apiKey, model } = req.body;
+    if (apiKey) {
+      setGeminiKey(apiKey, model);
+    }
+    res.json({
+      success: true,
+      message: 'Gemini configuration updated',
+      data: {
+        configured: isGeminiConfigured(),
+        model: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.post('/api/chat', protect, async (req, res) => {
   try {
     const { message, conversationId } = req.body;
     const convId = conversationId || `conv_${req.user._id}_${Date.now()}`;
 
-    // Save user message
+    // 1. Fetch previous conversation history
+    const history = await ChatMessage.find({ conversationId: convId })
+      .sort({ createdAt: 1 })
+      .limit(20);
+
+    // 2. Save user message
     await ChatMessage.create({ conversationId: convId, role: 'user', content: message, userId: req.user._id });
 
-    // Get ontology context
+    // 3. Get ontology and plant context
     const ontology = await Ontology.findOne({ createdBy: req.user._id });
-    const aiResponse = await AIEngine.chat(message, ontology);
+    const alerts = await Alert.find({ status: 'active' }).limit(10);
+    const plantData = await PlantData.findOne({ userId: req.user._id });
 
-    // Save assistant response
-    const assistantMsg = await ChatMessage.create({ conversationId: convId, role: 'assistant', content: aiResponse.content, userId: req.user._id });
+    // 4. Generate AI response (Gemini or simulated fallback)
+    const aiResponse = await AIEngine.chat(message, {
+      ontology,
+      alerts,
+      plantData,
+      history,
+      user: req.user,
+    });
 
-    res.json({ success: true, data: { conversationId: convId, message: assistantMsg, ...aiResponse } });
+    // 5. Save assistant response with metadata
+    const assistantMsg = await ChatMessage.create({
+      conversationId: convId,
+      role: 'assistant',
+      content: aiResponse.content,
+      userId: req.user._id,
+      meta: {
+        intent: aiResponse.intent,
+        confidence: aiResponse.confidence,
+        model: aiResponse.model,
+        source: aiResponse.source,
+      },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        conversationId: convId,
+        message: assistantMsg,
+        ...aiResponse,
+      },
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

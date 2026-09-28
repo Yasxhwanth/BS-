@@ -42,8 +42,10 @@ export const getDashboard    = ()   => api.get('/analytics/dashboard');
 export const predictNode     = (id) => api.get(`/analytics/predict/${id}`);
 
 // ─── Chat ───────────────────────────────
-export const sendChat        = (data) => api.post('/chat', data);
-export const getChatHistory  = (id)   => api.get(`/chat/history/${id}`);
+export const sendChat         = (data) => api.post('/chat', data);
+export const getChatHistory   = (id)   => api.get(`/chat/history/${id}`);
+export const getChatStatus    = ()     => api.get('/chat/status');
+export const saveGeminiConfig = (data) => api.post('/chat/config', data);
 
 // ─── Data Import & Template ─────────────
 export const uploadExcelData = (formData) => api.post('/upload/excel', formData, {
